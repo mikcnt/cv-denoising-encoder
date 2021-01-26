@@ -125,7 +125,7 @@ def main():
             gen_images = []
             num_batches = VAL_IMAGES // BATCH_SIZE + 1
             for batch_idx, (x_test, t_test) in enumerate(
-                tqdm(test_loader, ncols=50, desc="Validation")
+                tqdm(test_loader, ncols=70, desc="Validation")
             ):
                 x_test = x_test.to(device)
                 t_test = t_test.to(device)
