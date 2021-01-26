@@ -5,7 +5,9 @@ import cv2
 import numpy as np
 from torch.utils.data import Dataset
 
-from utils import noise
+import utils.noise as noise
+
+from PIL import Image
 
 random.seed(42069)
 
@@ -45,7 +47,8 @@ class ImageDataset(Dataset):
     def __getitem__(self, idx):
         # Load RANDOM clean image into memory...
         image_path = self.image_paths[idx]
-        clean_image = cv2.imread(image_path) / 255
+        # clean_image = cv2.imread(image_path) / 255
+        clean_image = np.array(Image.open(image_path)) / 255
         noisy_image = clean_image
         noisy_image = noise.pepper(
             noisy_image, threshold=0.5, amount=random.uniform(self.p_min, self.p_max)
@@ -57,8 +60,8 @@ class ImageDataset(Dataset):
             noisy_image, amount=random.uniform(self.s_min, self.s_max)
         )
 
-        noisy_image = (cv2.cvtColor(noisy_image, cv2.COLOR_BGR2RGB)).astype(np.float32)
-        clean_image = (cv2.cvtColor(clean_image, cv2.COLOR_BGR2RGB)).astype(np.float32)
+        clean_image = clean_image.astype(np.float32)
+        noisy_image = noisy_image.astype(np.float32)
 
         if self.transform:
             noisy_image = self.transform(noisy_image)
