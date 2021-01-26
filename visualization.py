@@ -9,7 +9,7 @@ import torchvision
 
 
 from models import AutoEncoder
-from utils import noise
+import utils.noise as noise
 
 img_size = (350, 350)
 img_box_size = (800, 350)
@@ -20,8 +20,6 @@ image_pred_str = "-IMAGE-PRED-"
 def get_img(path, noises):
     """ Generate png image from jpg """
     img = np.array(Image.open(path)) / 255
-    # img = cv2.imread(path)
-
     img = noise.pepper(img, amount=noises["pepper"])
     img = noise.salt(img, amount=noises["salt"])
     img = noise.gaussian(img, amount=noises["gaussian"])
@@ -127,7 +125,7 @@ layout = [
     ]
 ]
 
-window = sg.Window("Image Viewer", layout, font='Courier 12')
+window = sg.Window("Image Viewer", layout, font="Courier 12")
 
 model_loaded = False
 # Run the Event Loop

@@ -1,6 +1,7 @@
 from torch import nn
 import torchvision.transforms as tf
 
+
 def conv_layer(
     in_ch, out_ch, kernel, activation=nn.LeakyReLU(), stride=1, padding="same"
 ):
@@ -23,7 +24,7 @@ def conv_layer(
         padding = kernel // 2
     return nn.Sequential(
         nn.Conv2d(in_ch, out_ch, kernel, stride=stride, padding=padding),
-        # nn.BatchNorm2d(out_ch),
+        nn.BatchNorm2d(out_ch),
         activation,
     )
 
@@ -69,6 +70,7 @@ def deconv_layer(in_ch, out_ch, kernel, new_size=None, activation=nn.LeakyReLU()
 
 def maxpool(kernel=2):
     return nn.MaxPool2d(kernel_size=kernel)
+
 
 def upsample(scale_factor=2):
     return nn.Upsample(scale_factor=scale_factor)

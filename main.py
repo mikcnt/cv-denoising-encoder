@@ -124,7 +124,9 @@ def main():
             clean_images = []
             gen_images = []
             num_batches = VAL_IMAGES // BATCH_SIZE + 1
-            for batch_idx, (x_test, t_test) in enumerate(test_loader):
+            for batch_idx, (x_test, t_test) in enumerate(
+                tqdm(test_loader, ncols=70, desc="Validation")
+            ):
                 x_test = x_test.to(device)
                 t_test = t_test.to(device)
                 y_test = model(x_test)
@@ -140,7 +142,11 @@ def main():
         train_losses[epoch] = train_loss_epoch
         test_losses[epoch] = test_loss_epoch
 
-        print("Train loss = {:.4f} \t Test loss = {:.4f}".format(train_loss_epoch, test_loss_epoch))
+        print(
+            "Train loss = {:.4f} \t Test loss = {:.4f}".format(
+                train_loss_epoch, test_loss_epoch
+            )
+        )
 
         noise_path = "outputs/noise.png"
         real_path = "outputs/real.png"
