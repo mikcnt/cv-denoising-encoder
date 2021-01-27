@@ -111,10 +111,38 @@ class AutoEncoder(nn.Module):
         output = self.last_activation(output)
         return output
 
-
-class RelativeMSE(nn.Module):
+class Discriminator(nn.Module):
     def __init__(self):
-        super(RelativeMSE, self).__init__()
+        super(Discriminator, self).__init__()
 
-    def forward(self, y, t):
-        return torch.mean((y - t) ** 2 / ((y + 0.001) ** 2))
+        self.conv1 = conv_layer(3, 48, 4, stride=2, padding=1)
+        self.conv2 = conv_layer(48, 96, 4, stride=2, padding=1)
+        self.conv3 = conv_layer(96, 192, 4, stride=2, padding=1)
+        self.conv4 = conv_layer(192, 384, 4)
+        self.conv5 = conv_layer(384, 1, 4, activation=nn.Sigmoid())
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
+        return x
+
+class GeneratorLoss(nn.Module):
+    def __init__(self):
+        super(GeneratorLoss, self).__init__()
+        self.criterion = nn.BCELoss()
+
+    def forward(self, prediction_fake, ones):
+        return self.criterion(prediction_fake, ones)
+
+class DiscriminatorLoss(nn.Module):
+    def __init__(self):
+        super(DiscriminatorLoss, self).__init__()
+        self.criterion = nn.BCELoss()
+
+    def forward(self, prediction_real, ones, prediction_fake, zeros):
+        real_loss = self.criterion(prediction_real, ones)
+        fake_loss = self.criterion(prediction_fake, zeros)
+        return (real_loss + fake_loss) / 2

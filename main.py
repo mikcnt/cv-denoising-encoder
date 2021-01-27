@@ -7,10 +7,11 @@ from torch.utils.data import DataLoader
 from torch import optim
 import torchvision
 
-from models import AutoEncoder, RelativeMSE
+from models import AutoEncoder, GeneratorLoss
+from models import Discriminator, DiscriminatorLoss
 from dataset import ImageDataset
 from parser import main_parser
-from utils.checkpoint import load_checkpoint, save_checkpoint
+from utils.checkpoint import Checkpoint
 
 
 def main():
@@ -18,14 +19,10 @@ def main():
     parser = main_parser()
     args = parser.parse_args()
 
-    # Create checkpoints and outputs directories
-    os.makedirs("checkpoints", exist_ok=True)
-
-    os.makedirs("outputs", exist_ok=True)
-
     # Hyperparameters
     RESUME_LAST = args.resume_last
-    MODEL_CHECKPOINT = args.model_checkpoint
+    GENERATOR_CHECKPOINT = args.generator_checkpoint
+    DISCRIMINATOR_CHECKPOINT = args.discriminator_checkpoint
     h, w = 256, 256
     VAL_IMAGES = 40
     BATCH_SIZE = args.batch_size
@@ -41,13 +38,50 @@ def main():
     # Starting epoch
     epoch = 0
 
-    # Initialization of models
-    model = AutoEncoder().to(device)
+    # Resume last checkpoints
+
+    checkpoints_path = {
+        "discriminator": "checkpoints/discriminator",
+        "generator": "checkpoints/generator",
+    }
+
+    if RESUME_LAST:
+        try:
+            gen_path = sorted(os.listdir(checkpoints_path["generator"]))[-1]
+            dis_path = sorted(os.listdir(checkpoints_path["discriminator"]))[-1]
+            gen_path = os.path.join(checkpoints_path["generator"], gen_path)
+            dis_path = os.path.join(checkpoints_path["discriminator"], dis_path)
+        except IndexError:
+            print("One of the checkpoint doesn't exists")
+            exit(1)
+
+    if GENERATOR_CHECKPOINT:
+        gen_path = GENERATOR_CHECKPOINT
+
+    if DISCRIMINATOR_CHECKPOINT:
+        dis_path = DISCRIMINATOR_CHECKPOINT
 
     # Instantiate losses
     train_losses = {}
-
     test_losses = {}
+    try:
+        gen_checkpoint = Checkpoint(gen_path)
+        dis_checkpoint = Checkpoint(dis_path)
+
+        generator = AutoEncoder().to(device)
+        discriminator = Discriminator().to(device)
+
+        dis_opt = optim.Adam(discriminator.parameters(), lr=LEARNING_RATE)
+        gen_opt = optim.Adam(generator.parameters(), lr=LEARNING_RATE)
+
+        gen_criterion = GeneratorLoss()
+        dis_criterion = DiscriminatorLoss()
+
+        generator, gen_opt, epoch, gen_train_losses, gen_test_losses = gen_checkpoint.load(generator, gen_opt)
+        discriminator, dis_opt, epoch, dis_train_losses, dis_test_losses = dis_checkpoint.load(discriminator, dis_opt)
+        print("Models loaded from checkpoints!")
+    except RuntimeError:
+        print("No checkpoints, so the models are new!")
 
     # Load data
     transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
@@ -83,48 +117,51 @@ def main():
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-    # Initialize optimizers and losses
-    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-
-    criterion = nn.MSELoss()
-
-    # Resume last checkpoints
-    if RESUME_LAST:
-        checkpoints = sorted(os.listdir("checkpoints"))
-        if checkpoints:
-            MODEL_CHECKPOINT = os.path.join("checkpoints", checkpoints[-1])
-
-    # Resume specific checkpoint
-    if MODEL_CHECKPOINT:
-        model, optimizer, epoch, train_losses, test_losses = load_checkpoint(
-            model, optimizer, MODEL_CHECKPOINT
-        )
-        print("Finished loading checkpoint.")
-        print("Resuming training from epoch {}.".format(epoch))
-
     for epoch in range(epoch + 1, NUM_EPOCHS + 1):
-        model.train()
-        train_loss_epoch = 0
-        test_loss_epoch = 0
-        for x, t in tqdm(train_loader, ncols=70, desc="Epoch {}".format(epoch)):
-            x = x.to(device)
-            t = t.to(device)
+        generator.train()
+        discriminator.train()
 
-            y = model(x)
+        gen_train_loss_epoch = 0
+        dis_train_loss_epoch = 0
+        gen_test_loss_epoch = 0
+        dis_test_loss_epoch = 0
 
-            optimizer.zero_grad()
-            loss = criterion(y, t)
-            loss.backward()
-            optimizer.step()
+        for noise, clean in tqdm(train_loader, ncols=70, desc="Epoch {}".format(epoch)):
+            noise = noise.to(device)
+            clean = clean.to(device)
 
-            train_loss_epoch += loss.item()
+            fake = generator(noise)
+            prediction_real = discriminator(clean)
+            prediction_fake = discriminator(fake)
+
+            ones = torch.ones_like(prediction_real)
+            zeros = torch.zeros_like(prediction_fake)
+
+            # Train Discriminator
+            dis_loss = dis_criterion(prediction_real, ones, prediction_fake, zeros)
+            dis_loss.backward()
+
+            dis_opt.zero_grad()
+            dis_opt.step()
+
+            # Train generator
+            gen_loss = gen_criterion(prediction_fake, ones)
+            gen_loss.backward()
+
+            gen_opt.zero_grad()
+            gen_opt.step()
+
+            # Storing the losses of the epoch
+            gen_train_loss_epoch += gen_loss.item()
+            dis_train_loss_epoch += dis_loss.item()
 
         with torch.no_grad():
             noise_images = []
             clean_images = []
             gen_images = []
             num_batches = VAL_IMAGES // BATCH_SIZE + 1
-            for batch_idx, (x_test, t_test) in enumerate(
+
+            for batch_idx, (noise_test, clean_test) in enumerate(
                 tqdm(test_loader, ncols=70, desc="Validation")
             ):
                 x_test = x_test.to(device)
