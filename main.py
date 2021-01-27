@@ -88,11 +88,11 @@ def main():
 
     # Noise parameters
     g_min = 0.05
-    g_max = 0.08
-    p_min = 0.1
-    p_max = 0.2
+    g_max = 0.09
+    p_min = 0.75
+    p_max = 0.15
     s_min = 0.03
-    s_max = 0.06
+    s_max = 0.05
 
     train_dataset = ImageDataset(
         TRAIN_DATA_PATH,
