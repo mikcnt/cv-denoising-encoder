@@ -19,7 +19,7 @@ image_pred_str = "-IMAGE-PRED-"
 def get_img(path, noises):
     """ Generate png image from jpg """
     img = np.array(Image.open(path)) / 255
-    img = noise.pepper(img, amount=noises["pepper"])
+    img = noise.pepper(img, amount=noises["pepper"], threshold=0.5)
     img = noise.salt(img, amount=noises["salt"])
     img = noise.gaussian(img, amount=noises["gaussian"])
     return img.astype(np.float32)
