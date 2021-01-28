@@ -29,6 +29,7 @@ def main():
     BATCH_SIZE = args.batch_size
     NUM_EPOCHS = args.epochs
     LEARNING_RATE = args.learning_rate
+    BETAS = (0.5, 0.999)
     DATA_PATH = args.data_path
     TRAIN_DATA_PATH = os.path.join(DATA_PATH, "train")
     TEST_DATA_PATH = os.path.join(DATA_PATH, "test")
@@ -68,8 +69,8 @@ def main():
         generator = AutoEncoder().to(device)
         discriminator = Discriminator().to(device)
 
-        dis_opt = optim.Adam(discriminator.parameters(), lr=LEARNING_RATE)
-        gen_opt = optim.Adam(generator.parameters(), lr=LEARNING_RATE)
+        dis_opt = optim.Adam(discriminator.parameters(), lr=LEARNING_RATE, betas=BETAS)
+        gen_opt = optim.Adam(generator.parameters(), lr=LEARNING_RATE, betas=BETAS)
 
         gen_criterion = GeneratorLoss()
         dis_criterion = DiscriminatorLoss()

@@ -114,19 +114,27 @@ class AutoEncoder(nn.Module):
 class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
-
-        self.conv1 = conv_layer(3, 48, 4, stride=2, padding=1)
-        self.conv2 = conv_layer(48, 96, 4, stride=2, padding=1)
-        self.conv3 = conv_layer(96, 192, 4, stride=2, padding=1)
-        self.conv4 = conv_layer(192, 384, 4)
-        self.conv5 = conv_layer(384, 1, 4, activation=nn.Sigmoid())
+        # 256 x 256
+        self.conv1 = conv_layer(3, 32, 3, stride=2, padding=1)
+        # 128 x 128
+        self.conv2 = conv_layer(32, 64, 3, stride=2, padding=1)
+        # 64 x 64
+        self.conv3 = conv_layer(64, 128, 3, stride=2, padding=1)
+        # 32 x 32
+        self.conv4 = conv_layer(128, 256, 3, stride=2, padding=1)
+        # 16 x 16
+        self.linear = nn.Sequential(
+            nn.Linear(256 * 16 * 16, 1),
+            nn.Sigmoid()
+        )
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)
         x = self.conv4(x)
-        x = self.conv5(x)
+        x = x.view(x.size(0), -1)
+        x = self.linear(x)
         return x
 
 class GeneratorLoss(nn.Module):
@@ -136,7 +144,7 @@ class GeneratorLoss(nn.Module):
         self.mse = nn.MSELoss()
 
     def forward(self, prediction_fake, ones, fake, clean):
-        return self.adversarial(prediction_fake, ones) + self.mse(fake, clean)
+        return 0.003 * self.adversarial(prediction_fake, ones) + self.mse(fake, clean)
 
 class DiscriminatorLoss(nn.Module):
     def __init__(self):
