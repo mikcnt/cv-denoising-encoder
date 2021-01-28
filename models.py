@@ -132,10 +132,11 @@ class Discriminator(nn.Module):
 class GeneratorLoss(nn.Module):
     def __init__(self):
         super(GeneratorLoss, self).__init__()
-        self.criterion = nn.BCELoss()
+        self.adversarial = nn.BCELoss()
+        self.mse = nn.MSELoss()
 
-    def forward(self, prediction_fake, ones):
-        return self.criterion(prediction_fake, ones)
+    def forward(self, prediction_fake, ones, fake, clean):
+        return self.adversarial(prediction_fake, ones) + self.mse(fake, clean)
 
 class DiscriminatorLoss(nn.Module):
     def __init__(self):

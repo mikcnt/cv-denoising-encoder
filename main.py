@@ -146,7 +146,7 @@ def main():
             # Train generator
             disc_fake_predictions = discriminator(fake).reshape(-1)
             ones_gen = torch.ones_like(disc_fake_predictions)
-            gen_loss = gen_criterion(disc_fake_predictions, ones_gen)
+            gen_loss = gen_criterion(disc_fake_predictions, ones_gen, fake, clean)
             gen_opt.zero_grad()
             gen_loss.backward()
             gen_opt.step()
@@ -178,7 +178,7 @@ def main():
                 dis_loss_test = dis_criterion(prediction_real_test, ones_test, prediction_fake_test, zeros_test)
 
                 # Train generator
-                gen_loss_test = gen_criterion(prediction_fake_test, ones_test)
+                gen_loss_test = gen_criterion(prediction_fake_test, ones_test, noise_test, clean_test)
 
                 # Update test losses of the epoch
                 gen_test_loss_epoch += gen_loss_test.item()
