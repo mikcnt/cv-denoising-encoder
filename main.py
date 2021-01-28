@@ -132,9 +132,8 @@ def main():
             clean = clean.to(device)
 
             fake = generator(noise)
-            prediction_real = discriminator(clean)
-            prediction_fake = discriminator(fake.detach())
-
+            prediction_real = discriminator(clean).reshape(-1)
+            prediction_fake = discriminator(fake.detach()).reshape(-1)
             ones = torch.ones_like(prediction_real)
             zeros = torch.zeros_like(prediction_fake)
 
@@ -145,8 +144,9 @@ def main():
             dis_opt.step()
 
             # Train generator
-            disc_fake_predictions = discriminator(fake)
-            gen_loss = gen_criterion(disc_fake_predictions, ones)
+            disc_fake_predictions = discriminator(fake).reshape(-1)
+            ones_gen = torch.ones_like(disc_fake_predictions)
+            gen_loss = gen_criterion(disc_fake_predictions, ones_gen)
             gen_opt.zero_grad()
             gen_loss.backward()
             gen_opt.step()
@@ -193,8 +193,8 @@ def main():
         # Store losses of the epoch in dictionaries
         gen_train_losses[epoch] = gen_train_loss_epoch
         dis_train_losses[epoch] = dis_train_loss_epoch
-        gen_train_losses[epoch] = gen_test_loss_epoch
-        dis_train_losses[epoch] = dis_test_loss_epoch
+        gen_test_losses[epoch] = gen_test_loss_epoch
+        dis_test_losses[epoch] = dis_test_loss_epoch
 
         print(
             "G. Train loss = {:.4f} \t D. Train loss = {:.4f}".format(
