@@ -12,6 +12,7 @@ from models import Discriminator, DiscriminatorLoss
 from dataset import ImageDataset
 from parser import main_parser
 from utils.checkpoint import Checkpoint
+from utils.output import Output
 
 
 def main():
@@ -38,6 +39,10 @@ def main():
     # Starting epoch
     epoch = 0
 
+    noise_output = Output("outputs/noise.png", VAL_IMAGES, overwrite = False)
+    clean_output = Output("outputs/clean.png", VAL_IMAGES, overwrite = False)
+    gen_output = Output("outputs", VAL_IMAGES, overwrite = True)
+
     # Resume last checkpoints
     checkpoints_path = {
         "discriminator": "checkpoints/discriminator",
@@ -56,9 +61,6 @@ def main():
     else:
         id_dis_path = ''
 
-    # Instantiate losses
-    train_losses = {}
-    test_losses = {}
     try:
         gen_checkpoint = Checkpoint(gen_path, RESUME_LAST)
         dis_checkpoint = Checkpoint(dis_path, RESUME_LAST)
@@ -156,9 +158,6 @@ def main():
             dis_train_loss_epoch += dis_loss.item()
 
         with torch.no_grad():
-            noise_images = []
-            clean_images = []
-            gen_images = []
             num_batches = VAL_IMAGES // BATCH_SIZE + 1
 
             for batch_idx, (noise_test, clean_test) in enumerate(
@@ -186,9 +185,9 @@ def main():
 
                 # Store images for visual feedbacks
                 if batch_idx < num_batches:
-                    noise_images.append(noise_test)
-                    clean_images.append(clean_test)
-                    gen_images.append(fake_test)
+                    noise_output.append(noise_test)
+                    clean_output.append(clean_test)
+                    gen_output.append(fake_test)
 
         # Store losses of the epoch in dictionaries
         gen_train_losses[epoch] = gen_train_loss_epoch
@@ -208,21 +207,9 @@ def main():
         )
 
         # Save images
-        noise_path = "outputs/noise.png"
-        real_path = "outputs/real.png"
-        gen_path = "outputs/{}_fake.png".format(str(epoch).zfill(3))
-
-        noise_images = torch.cat(noise_images, dim=0)[:VAL_IMAGES, ...]
-        clean_images = torch.cat(clean_images, dim=0)[:VAL_IMAGES, ...]
-        gen_images = torch.cat(gen_images, dim=0)[:VAL_IMAGES, ...]
-
-        img_grid_noise = torchvision.utils.make_grid(noise_images, nrow=8)
-        img_grid_clean = torchvision.utils.make_grid(clean_images, nrow=8)
-        img_grid_gen = torchvision.utils.make_grid(gen_images, nrow=8)
-
-        torchvision.utils.save_image(img_grid_noise, noise_path)
-        torchvision.utils.save_image(img_grid_clean, real_path)
-        torchvision.utils.save_image(img_grid_gen, gen_path)
+        noise_output.save()
+        clean_output.save()
+        gen_output.save(filename = "{}_fake.png".format(str(epoch).zfill(3)))
         
         # Save checkpoints
         gen_checkpoint.save(generator, gen_opt, epoch, gen_train_losses, gen_test_losses)
