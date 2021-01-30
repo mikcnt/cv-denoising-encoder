@@ -3,6 +3,7 @@ import numpy as np
 
 
 def pepper(img, threshold=1, amount=0.5):
+    _range = 0.4
     h, w, _ = img.shape
     img_lab = rgb2lab(img)
     img_l = (
@@ -14,7 +15,7 @@ def pepper(img, threshold=1, amount=0.5):
     black_mask = thresh_img & probability_mask
     out = img
 
-    luminosity = np.random.rand(*out.shape[:-1]) * 0.4
+    luminosity = np.random.rand(*out.shape[:-1]) * _range
 
     luminosity = np.dstack([luminosity] * 3)
     out[black_mask, :] = np.multiply(out[black_mask, :], luminosity[black_mask, :])
