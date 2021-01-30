@@ -72,5 +72,5 @@ def maxpool(kernel=2):
     return nn.MaxPool2d(kernel_size=kernel)
 
 
-def upsample(scale_factor=2):
-    return nn.Upsample(scale_factor=scale_factor)
+def transpose_conv(in_ch, out_ch, kernel=4, stride=2, padding=1):
+    return nn.ConvTranspose2d(in_ch, out_ch, kernel, stride, padding)
