@@ -13,7 +13,6 @@ from utils.layer import transpose_conv
 class AutoEncoder(nn.Module):
     def __init__(self):
         super(AutoEncoder, self).__init__()
-        self.use_sigmoid = use_sigmoid
         # 3x256x256
         self.conv0 = conv_layer(in_ch=3, out_ch=48, kernel=3, stride=1)
         # 48x256x256
