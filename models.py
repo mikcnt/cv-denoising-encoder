@@ -9,6 +9,7 @@ from utils.layer import conv_layer
 from utils.layer import maxpool
 from utils.layer import transpose_conv
 
+
 class AutoEncoder(nn.Module):
     def __init__(self, use_sigmoid=True):
         super(AutoEncoder, self).__init__()

@@ -79,8 +79,7 @@ class RenderedImages(Dataset):
         self.images_folder = images_folder
         self.image_paths = sorted(find_paths(images_folder))
         self.transform = transform
-        
-        
+
     # Returns the number of samples, it is used for iteration porpuses
     def __len__(self):
         return len(self.image_paths)

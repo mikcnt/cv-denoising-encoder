@@ -15,15 +15,19 @@ from utils import noise
 
 parser = argparse.ArgumentParser(description="Arguments parser")
 
-parser.add_argument('--noise', dest='noise', action='store_true',
-                    help='use this flag to add noise to the image before the generation')
+parser.add_argument(
+    "--noise",
+    dest="noise",
+    action="store_true",
+    help="use this flag to add noise to the image before the generation",
+)
 
 parser.add_argument(
-        "--img",
-        default="",
-        type=str,
-        help="img path",
-    )
+    "--img",
+    default="",
+    type=str,
+    help="img path",
+)
 
 parser.add_argument(
     "--model",
@@ -57,15 +61,9 @@ s_min = 0.03
 s_max = 0.01
 
 if NOISE:
-    img = noise.pepper(
-            img, threshold=0.5, amount=p_max
-        )
-    img = noise.salt(
-            img, amount=s_max
-        )
-    img = noise.gaussian(
-        img, amount=g_max
-    )
+    img = noise.pepper(img, threshold=0.5, amount=p_max)
+    img = noise.salt(img, amount=s_max)
+    img = noise.gaussian(img, amount=g_max)
 
 img_tensor = to_tensor(img).unsqueeze(0)
 
@@ -76,9 +74,7 @@ gen = AutoEncoder()
 
 if MODEL_CHECKPOINT:
     if os.path.isfile(MODEL_CHECKPOINT):
-        print(
-            "Loading checkpoint {} of the generator...".format(MODEL_CHECKPOINT)
-        )
+        print("Loading checkpoint {} of the generator...".format(MODEL_CHECKPOINT))
         checkpoint = torch.load(
             MODEL_CHECKPOINT, map_location=lambda storage, loc: storage
         )
