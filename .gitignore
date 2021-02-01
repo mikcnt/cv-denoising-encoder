@@ -8,3 +8,5 @@ checkpoints
 to_keep
 renamer.py
 coco
+data_rend
+best_models
