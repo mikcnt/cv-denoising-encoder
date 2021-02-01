@@ -110,11 +110,3 @@ class AutoEncoder(nn.Module):
         output = self.dec_conv1c(output)
         output = self.last_activation(output)
         return output
-
-
-class RelativeMSE(nn.Module):
-    def __init__(self):
-        super(RelativeMSE, self).__init__()
-
-    def forward(self, y, t):
-        return torch.mean((y - t) ** 2 / ((y + 0.001) ** 2))

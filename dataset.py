@@ -1,13 +1,13 @@
 import os
 import random
+from PIL import Image
 
 import cv2
 import numpy as np
 from torch.utils.data import Dataset
 
 import utils.noise as noise
-
-from PIL import Image
+from utils.data import find_paths, t_path
 
 random.seed(42069)
 
@@ -58,6 +58,39 @@ class ImageDataset(Dataset):
         noisy_image = noise.salt(
             noisy_image, amount=random.uniform(self.s_min, self.s_max)
         )
+
+        clean_image = clean_image.astype(np.float32)
+        noisy_image = noisy_image.astype(np.float32)
+
+        if self.transform:
+            noisy_image = self.transform(noisy_image)
+            clean_image = self.transform(clean_image)
+
+        return noisy_image, clean_image
+
+
+class RenderedImages(Dataset):
+    def __init__(
+        self,
+        images_folder,
+        transform=None,
+    ):
+        super().__init__()
+        self.images_folder = images_folder
+        self.image_paths = sorted(find_paths(images_folder))
+        self.transform = transform
+        
+        
+    # Returns the number of samples, it is used for iteration porpuses
+    def __len__(self):
+        return len(self.image_paths)
+
+    # Returns a random sample for training(generally)
+    def __getitem__(self, idx):
+        # Load RANDOM clean image into memory...
+        image_path = self.image_paths[idx]
+        noisy_image = np.array(Image.open(image_path)) / 255
+        clean_image = np.array(Image.open(t_path(self.images_folder, image_path))) / 255
 
         clean_image = clean_image.astype(np.float32)
         noisy_image = noisy_image.astype(np.float32)
