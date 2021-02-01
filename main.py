@@ -7,21 +7,16 @@ from torch.utils.data import DataLoader
 from torch import optim
 import torchvision
 
-from models import AutoEncoder, RelativeMSE
+from models import AutoEncoder
 from dataset import ImageDataset
 from parser import main_parser
-from utils.checkpoint import load_checkpoint, save_checkpoint
+from utils.checkpoint import Checkpoint
 
 
 def main():
     # Load arguments from the parser
     parser = main_parser()
     args = parser.parse_args()
-
-    # Create checkpoints and outputs directories
-    os.makedirs("checkpoints", exist_ok=True)
-
-    os.makedirs("outputs", exist_ok=True)
 
     # Hyperparameters
     RESUME_LAST = args.resume_last
@@ -37,17 +32,6 @@ def main():
 
     # Select device for training (gpu if available)
     device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    # Starting epoch
-    epoch = 0
-
-    # Initialization of models
-    model = AutoEncoder().to(device)
-
-    # Instantiate losses
-    train_losses = {}
-
-    test_losses = {}
 
     # Load data
     transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
@@ -84,24 +68,27 @@ def main():
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-    # Initialize optimizers and losses
-    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    # Resume model checkpoint if given. Otherwise start training from scratch.
+    # Resume last if `resume_last` flag is True, otherwise manual checkpoint selection
+    checkpoint = Checkpoint("checkpoints", RESUME_LAST)
 
+    # Initialization of model, optimizer and criterion
+    model = AutoEncoder().to(device)
+    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
     criterion = nn.MSELoss()
 
-    # Resume last checkpoints
-    if RESUME_LAST:
-        checkpoints = sorted(os.listdir("checkpoints"))
-        if checkpoints:
-            MODEL_CHECKPOINT = os.path.join("checkpoints", checkpoints[-1])
-
-    # Resume specific checkpoint
-    if MODEL_CHECKPOINT:
-        model, optimizer, epoch, train_losses, test_losses = load_checkpoint(
+    # Checkpoint loading
+    try:
+        model, optimizer, epoch, train_losses, test_losses = checkpoint.load(
             model, optimizer, MODEL_CHECKPOINT
         )
-        print("Finished loading checkpoint.")
-        print("Resuming training from epoch {}.".format(epoch))
+        print("Model loaded from checkpoint.")
+        print("Starting training from epoch {}.".format(epoch))
+    except RuntimeError:
+        print("No valid checkpoint is given, starting training from scratch.")
+        epoch = 0
+        train_losses = {}
+        test_losses = {}
 
     for epoch in range(epoch + 1, NUM_EPOCHS + 1):
         model.train()
