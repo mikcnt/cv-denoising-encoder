@@ -7,7 +7,7 @@ import torchvision.transforms as tf
 
 from utils.layer import conv_layer
 from utils.layer import maxpool
-from utils.layer import upsample
+from utils.layer import transpose_conv
 
 class AutoEncoder(nn.Module):
     def __init__(self, use_sigmoid=True):
@@ -38,24 +38,24 @@ class AutoEncoder(nn.Module):
         # 48x8x8
         self.conv6 = conv_layer(in_ch=48, out_ch=48, kernel=3, stride=1)
         # 48x8x8
-        self.upsample5 = upsample()
+        self.upsample5 = transpose_conv(48, 48)
         # 48x16x16
         # concat output of pool4 on channel dimension
         self.dec_conv5a = conv_layer(in_ch=96, out_ch=96, kernel=3, stride=1)
         self.dec_conv5b = conv_layer(in_ch=96, out_ch=96, kernel=3, stride=1)
-        self.upsample4 = upsample()
+        self.upsample4 = transpose_conv(96, 96)
         # concat output of pool3 on channel dimension
         self.dec_conv4a = conv_layer(in_ch=144, out_ch=96, kernel=3, stride=1)
         self.dec_conv4b = conv_layer(in_ch=96, out_ch=96, kernel=3, stride=1)
-        self.upsample3 = upsample()
+        self.upsample3 = transpose_conv(96, 96)
         # concat output of pool2 on channel dimension
         self.dec_conv3a = conv_layer(in_ch=144, out_ch=96, kernel=3, stride=1)
         self.dec_conv3b = conv_layer(in_ch=96, out_ch=96, kernel=3, stride=1)
-        self.upsample2 = upsample()
+        self.upsample2 = transpose_conv(96, 96)
         # concat output of pool1 on channel dimension
         self.dec_conv2a = conv_layer(in_ch=144, out_ch=96, kernel=3, stride=1)
         self.dec_conv2b = conv_layer(in_ch=96, out_ch=96, kernel=3, stride=1)
-        self.upsample1 = upsample()
+        self.upsample1 = transpose_conv(96, 96)
         # concat output of pool0 on input
         self.dec_conv1a = conv_layer(in_ch=99, out_ch=64, kernel=3, stride=1)
         self.dec_conv1b = conv_layer(in_ch=64, out_ch=32, kernel=3, stride=1)
