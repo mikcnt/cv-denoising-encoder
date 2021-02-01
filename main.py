@@ -11,10 +11,11 @@ from models import AutoEncoder
 from dataset import ImageDataset
 from parser import main_parser
 from utils.checkpoint import Checkpoint
+from utils.log import Output
 
 
 def main():
-    # Load arguments from the parser
+    # Arguments from the parser
     parser = main_parser()
     args = parser.parse_args()
 
@@ -30,10 +31,10 @@ def main():
     TRAIN_DATA_PATH = os.path.join(DATA_PATH, "train")
     TEST_DATA_PATH = os.path.join(DATA_PATH, "test")
 
-    # Select device for training (gpu if available)
+    # Device selection (gpu if available)
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    # Load data
+    # Data loading
     transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
 
     # Noise parameters
@@ -68,6 +69,11 @@ def main():
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
+    # Logging prep
+    noise_output = Output("outputs/noise.png", VAL_IMAGES, overwrite=False)
+    clean_output = Output("outputs/clean.png", VAL_IMAGES, overwrite=False)
+    gen_output = Output("outputs", VAL_IMAGES, overwrite=True)
+
     # Resume model checkpoint if given. Otherwise start training from scratch.
     # Resume last if `resume_last` flag is True, otherwise manual checkpoint selection
     checkpoint = Checkpoint("checkpoints", RESUME_LAST)
@@ -94,39 +100,41 @@ def main():
         model.train()
         train_loss_epoch = 0
         test_loss_epoch = 0
-        for x, t in tqdm(train_loader, ncols=70, desc="Epoch {}".format(epoch)):
-            x = x.to(device)
-            t = t.to(device)
+        for noise, clean in tqdm(train_loader, ncols=70, desc="Epoch {}".format(epoch)):
+            noise = noise.to(device)
+            clean = clean.to(device)
+            fake = model(noise)
 
-            y = model(x)
-
+            # Training step
             optimizer.zero_grad()
-            loss = criterion(y, t)
+            loss = criterion(fake, clean)
             loss.backward()
             optimizer.step()
 
+            # Updating epoch loss
             train_loss_epoch += loss.item()
 
+        # Evaluation step
+        model.eval()
         with torch.no_grad():
-            noise_images = []
-            clean_images = []
-            gen_images = []
             num_batches = VAL_IMAGES // BATCH_SIZE + 1
-            for batch_idx, (x_test, t_test) in enumerate(
+
+            for batch_idx, (noise_test, clean_test) in enumerate(
                 tqdm(test_loader, ncols=70, desc="Validation")
             ):
-                x_test = x_test.to(device)
-                t_test = t_test.to(device)
-                y_test = model(x_test)
+                noise_test = noise_test.to(device)
+                clean_test = clean_test.to(device)
+                fake_test = model(noise_test)
 
-                loss_test = criterion(y_test, t_test)
+                loss_test = criterion(fake_test, clean_test)
                 test_loss_epoch += loss_test.item()
 
                 if batch_idx < num_batches:
-                    noise_images.append(x_test)
-                    clean_images.append(t_test)
-                    gen_images.append(y_test)
+                    noise_output.append(noise_test)
+                    clean_output.append(clean_test)
+                    gen_output.append(fake_test)
 
+        # Store losses of the epoch in the appropriate dictionaries
         train_losses[epoch] = train_loss_epoch
         test_losses[epoch] = test_loss_epoch
 
@@ -136,25 +144,13 @@ def main():
             )
         )
 
-        noise_path = "outputs/noise.png"
-        real_path = "outputs/real.png"
-        gen_path = "outputs/{}_fake.png".format(str(epoch).zfill(3))
+        # Save output images
+        noise_output.save()
+        clean_output.save()
+        gen_output.save(filename="{}_fake.png".format(str(epoch).zfill(3)))
 
-        noise_images = torch.cat(noise_images, dim=0)[:VAL_IMAGES, ...]
-        clean_images = torch.cat(clean_images, dim=0)[:VAL_IMAGES, ...]
-        gen_images = torch.cat(gen_images, dim=0)[:VAL_IMAGES, ...]
-
-        img_grid_noise = torchvision.utils.make_grid(noise_images, nrow=8)
-        img_grid_clean = torchvision.utils.make_grid(clean_images, nrow=8)
-        img_grid_gen = torchvision.utils.make_grid(gen_images, nrow=8)
-
-        torchvision.utils.save_image(img_grid_noise, noise_path)
-        torchvision.utils.save_image(img_grid_clean, real_path)
-        torchvision.utils.save_image(img_grid_gen, gen_path)
-
-        check_path = "checkpoints/{}.pth".format(str(epoch).zfill(3))
-
-        save_checkpoint(model, optimizer, epoch, train_losses, test_losses, check_path)
+        # Save checkpoint
+        checkpoint.save(model, optimizer, epoch, train_losses, test_losses)
 
 
 if __name__ == "__main__":
