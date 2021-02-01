@@ -4,7 +4,6 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from torch import optim
 import torchvision
 
 from models import AutoEncoder
@@ -80,7 +79,7 @@ def main():
 
     # Initialization of model, optimizer and criterion
     model = AutoEncoder().to(device)
-    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
     criterion = nn.MSELoss()
 
     # Checkpoint loading
