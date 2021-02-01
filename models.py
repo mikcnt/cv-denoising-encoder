@@ -11,7 +11,7 @@ from utils.layer import transpose_conv
 
 
 class AutoEncoder(nn.Module):
-    def __init__(self, use_sigmoid=True):
+    def __init__(self):
         super(AutoEncoder, self).__init__()
         self.use_sigmoid = use_sigmoid
         # 3x256x256
@@ -61,9 +61,8 @@ class AutoEncoder(nn.Module):
         self.dec_conv1a = conv_layer(in_ch=99, out_ch=64, kernel=3, stride=1)
         self.dec_conv1b = conv_layer(in_ch=64, out_ch=32, kernel=3, stride=1)
         self.dec_conv1c = conv_layer(
-            in_ch=32, out_ch=3, kernel=3, stride=1, activation=nn.Identity()
+            in_ch=32, out_ch=3, kernel=3, stride=1, activation=nn.Sigmoid()
         )
-        self.last_activation = nn.Sigmoid() if self.use_sigmoid else nn.Identity()
 
     def forward(self, x):
         concats = [x]
@@ -109,5 +108,4 @@ class AutoEncoder(nn.Module):
         output = self.dec_conv1a(output)
         output = self.dec_conv1b(output)
         output = self.dec_conv1c(output)
-        output = self.last_activation(output)
         return output
