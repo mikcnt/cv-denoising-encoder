@@ -28,49 +28,21 @@ def conv_layer(
         activation,
     )
 
-
-def res_block(channels, kernel):
-    """Residual block, used to keep skip connections.
-    Applies a convolutional layer with non-linearity.
-
-    Args:
-        channels (int): Input and output channels (channels are kept).
-        kernel (int): Filter size for the convolution.
-
-    Returns:
-        func: Residual block.
-    """
+def conv_maxpool(in_ch, out_ch, kernel, stride=1):
     return nn.Sequential(
-        conv_layer(channels, channels, kernel), conv_layer(channels, channels, kernel)
+        conv_layer(in_ch=in_ch, out_ch=out_ch, kernel=kernel, stride=stride),
+        maxpool()
     )
 
-
-def deconv_layer(in_ch, out_ch, kernel, new_size=None, activation=nn.LeakyReLU()):
-    """Deconvolutional layer. Applies convolutionwith activation.
-    If `new_size` is given, image is also resized accordingly.
-
-    Args:
-        in_ch (int): Number of input channels for the convolution.
-        out_ch (int): Number of output channels for the convolution.
-        kernel (int): Filter size for the convolution.
-        new_size (int, optional): New size of the image after the resize. Defaults to None.
-        activation (nn.activation, optional): Non-linearity after the convolutional layer.
-                                              Defaults to nn.LeakyReLU().
-
-    Returns:
-        func: Deconvolutional layer.
-    """
-    if new_size:
-        return nn.Sequential(
-            tf.Resize(new_size, interpolation=3),
-            conv_layer(in_ch, out_ch, kernel, activation),
-        )
-    return conv_layer(in_ch, out_ch, kernel, activation)
-
+def deconv_block(in_ch, out_ch, kernel, stride=1):
+    return nn.Sequential(
+        conv_layer(in_ch=in_ch, out_ch=out_ch, kernel=kernel, stride=stride),
+        conv_layer(in_ch=out_ch, out_ch=out_ch, kernel=kernel, stride=stride),
+        transpose_conv(96, 96)
+    )
 
 def maxpool(kernel=2):
     return nn.MaxPool2d(kernel_size=kernel)
-
 
 def transpose_conv(in_ch, out_ch, kernel=4, stride=2, padding=1):
     return nn.ConvTranspose2d(in_ch, out_ch, kernel, stride, padding)
