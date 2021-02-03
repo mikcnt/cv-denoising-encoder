@@ -69,7 +69,7 @@ class ImageDataset(Dataset):
         return noisy_image, clean_image
 
 
-class RenderedImages(Dataset):
+class RenderDataset(Dataset):
     def __init__(
         self,
         images_folder,
@@ -88,14 +88,17 @@ class RenderedImages(Dataset):
     def __getitem__(self, idx):
         # Load RANDOM clean image into memory...
         image_path = self.image_paths[idx]
-        noisy_image = np.array(Image.open(image_path)) / 255
-        clean_image = np.array(Image.open(t_path(self.images_folder, image_path))) / 255
-
-        clean_image = clean_image.astype(np.float32)
-        noisy_image = noisy_image.astype(np.float32)
+        noisy_image = np.array(Image.open(image_path))
+        clean_image = np.array(Image.open(t_path(self.images_folder, image_path)))
 
         if self.transform:
-            noisy_image = self.transform(noisy_image)
-            clean_image = self.transform(clean_image)
+            torch.random.seed()
+            augmentations = self.transform(image=noisy_image, image0=clean_image)
+            
+            noisy_image = augmentations['image']
+            clean_image = augmentations['image0']
 
+        clean_image = (clean_image / 255).astype(np.float32)
+        noisy_image = (noisy_image / 255).astype(np.float32)
+        
         return noisy_image, clean_image

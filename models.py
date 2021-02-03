@@ -19,14 +19,16 @@ class AutoEncoder(nn.Module):
         # Encoding block...
         self.conv_max1 = nn.Sequential(
             conv_layer(in_ch=3, out_ch=48, kernel=3),
-            conv_maxpool(in_ch=48, out_ch=48, kernel=3))
+            conv_maxpool(in_ch=48, out_ch=48, kernel=3),
+        )
         self.conv_max2 = conv_maxpool(in_ch=48, out_ch=48, kernel=3)
         self.conv_max3 = conv_maxpool(in_ch=48, out_ch=48, kernel=3)
         self.conv_max4 = conv_maxpool(in_ch=48, out_ch=48, kernel=3)
         self.conv_max5 = nn.Sequential(
             conv_maxpool(in_ch=48, out_ch=48, kernel=3),
             conv_layer(in_ch=48, out_ch=48, kernel=3),
-            transpose_conv(48, 48))
+            transpose_conv(48, 48),
+        )
 
         # Deconv blocks...
         self.dec_conv5 = deconv_block(in_ch=96, out_ch=96, kernel=3)
@@ -36,8 +38,8 @@ class AutoEncoder(nn.Module):
         self.dec_conv1 = nn.Sequential(
             conv_layer(in_ch=99, out_ch=64, kernel=3),
             conv_layer(in_ch=64, out_ch=32, kernel=3),
-            conv_layer(in_ch=32, out_ch=3, kernel=3, activation=nn.Sigmoid()))
-
+            conv_layer(in_ch=32, out_ch=3, kernel=3, activation=nn.Sigmoid()),
+        )
 
     def forward(self, x):
         concats = [x]
@@ -50,14 +52,22 @@ class AutoEncoder(nn.Module):
         output = self.conv_max4(output)
         concats.append(output)
         output = self.conv_max5(output)
-        output = torch.cat((output, concats.pop()), dim=1) # concat output of pool4 on channel dimension
+        output = torch.cat(
+            (output, concats.pop()), dim=1
+        )  # concat output of pool4 on channel dimension
         output = self.dec_conv5(output)
-        output = torch.cat((output, concats.pop()), dim=1) # concat output of pool3 on channel dimension
+        output = torch.cat(
+            (output, concats.pop()), dim=1
+        )  # concat output of pool3 on channel dimension
         output = self.dec_conv4(output)
-        output = torch.cat((output, concats.pop()), dim=1) # concat output of pool2 on channel dimension
+        output = torch.cat(
+            (output, concats.pop()), dim=1
+        )  # concat output of pool2 on channel dimension
         output = self.dec_conv3(output)
-        output = torch.cat((output, concats.pop()), dim=1) # concat output of pool1 on channel dimension
+        output = torch.cat(
+            (output, concats.pop()), dim=1
+        )  # concat output of pool1 on channel dimension
         output = self.dec_conv2(output)
-        output = torch.cat((output, concats.pop()), dim=1) # concat input
+        output = torch.cat((output, concats.pop()), dim=1)  # concat input
         output = self.dec_conv1(output)
         return output
