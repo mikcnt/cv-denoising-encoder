@@ -40,9 +40,16 @@ class Checkpoint:
         torch.save(model_checkpoint, complete_path)
         return checkpoint_name
     
-    def download(self, epoch):
-        from google.colab import files
+    def save_drive(self, model, optimizer, epoch, train_loss, test_loss):
+        model_checkpoint = {
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "epoch": epoch,
+            "train_loss": train_loss,
+            "test_loss": test_loss,
+        }
         checkpoint_name = "{}.pth".format(str(epoch).zfill(3))
-        complete_path = os.path.join(self.path, checkpoint_name)
-        files.download(complete_path) 
+        complete_path = os.path.join('/content/drive/MyDrive/checkpoints', checkpoint_name)
+        torch.save(model_checkpoint, complete_path)
+        return checkpoint_name
         

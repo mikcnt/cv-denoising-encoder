@@ -30,8 +30,8 @@ def main():
     DATA_PATH = args.data_path
     TRAIN_DATA_PATH = os.path.join(DATA_PATH, "train")
     TEST_DATA_PATH = os.path.join(DATA_PATH, "test")
-    
-    DOWNLOAD_CHECKPOINT = args.download_checkpoint
+
+    USE_DRIVE = args.use_drive
 
     # Device selection (gpu if available)
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -44,7 +44,7 @@ def main():
             A.Rotate(limit=40, p=0.5),
             A.HorizontalFlip(p=0.5),
             A.VerticalFlip(p=0.3),
-            A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=1),        
+            A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=1),
             A.ChannelShuffle(p=0.2),
             A.CLAHE(p=0.5),
             A.ToGray(p=0.2),
@@ -58,12 +58,12 @@ def main():
             A.ElasticTransform(p=0.3),
             A.RandomBrightness(),
         ],
-        additional_targets={'image0': 'image', 'image1': 'image'}
+        additional_targets={"image0": "image", "image1": "image"},
     )
 
     train_dataset = RenderDataset(images_folder=TRAIN_DATA_PATH, transform=transform)
     # test_dataset = RenderDataset(images_folder=TEST_DATA_PATH, transform=transform)
-    
+
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     # test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
@@ -148,9 +148,10 @@ def main():
         # gen_output.save(filename="{}_fake.png".format(str(epoch).zfill(3)))
 
         # Save checkpoint
-        checkpoint.save(model, optimizer, epoch, train_losses, test_losses)
-        if DOWNLOAD_CHECKPOINT and epoch % 5 == 0:
-            checkpoint.download(epoch - 1)
+        if USE_DRIVE:
+            checkpoint.save_drive(model, optimizer, epoch, train_losses, test_losses)
+        else:
+            checkpoint.save(model, optimizer, epoch, train_losses, test_losses)
 
 
 if __name__ == "__main__":

@@ -35,9 +35,9 @@ def main_parser():
         help="dataset path",
     )
     parser.add_argument(
-        "--download_checkpoint",
-        dest="download_checkpoint",
+        "--use_drive",
+        dest="use_drive",
         action="store_true",
-        help="use this flag to download checkpoint at the end of training",
+        help="use this flag to save checkpoint on drive",
     )
     return parser
