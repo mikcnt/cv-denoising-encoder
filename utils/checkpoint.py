@@ -43,6 +43,6 @@ class Checkpoint:
     def download(self, epoch):
         from google.colab import files
         checkpoint_name = "{}.pth".format(str(epoch).zfill(3))
-        omplete_path = os.path.join(self.path, checkpoint_name)
+        complete_path = os.path.join(self.path, checkpoint_name)
         files.download(complete_path) 
         
