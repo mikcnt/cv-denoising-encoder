@@ -92,7 +92,6 @@ class RenderDataset(Dataset):
         clean_image = np.array(Image.open(t_path(self.images_folder, image_path)))
 
         if self.transform:
-            torch.random.seed()
             augmentations = self.transform(image=noisy_image, image0=clean_image)
             
             noisy_image = augmentations['image']
