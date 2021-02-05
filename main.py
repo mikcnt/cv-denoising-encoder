@@ -5,9 +5,10 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import torchvision
+import albumentations as A
 
 from models import AutoEncoder
-from dataset import ImageDataset
+from dataset import RenderDataset
 from parser import main_parser
 from utils.checkpoint import Checkpoint
 from utils.log import Output
@@ -34,44 +35,40 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # Data loading
-    transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
-
-    # Noise parameters
-    g_min = 0.05
-    g_max = 0.09
-    p_min = 0.075
-    p_max = 0.15
-    s_min = 0.03
-    s_max = 0.05
-
-    train_dataset = ImageDataset(
-        TRAIN_DATA_PATH,
-        transform=transform,
-        g_min=g_min,
-        g_max=g_max,
-        p_min=p_min,
-        p_max=p_max,
-        s_min=s_min,
-        s_max=s_max,
-    )
-    test_dataset = ImageDataset(
-        TEST_DATA_PATH,
-        transform=transform,
-        g_min=g_max,
-        g_max=g_max,
-        p_min=p_max,
-        p_max=p_max,
-        s_min=s_max,
-        s_max=s_max,
+    transform = A.Compose(
+        [
+            A.Resize(width=350, height=350),
+            A.RandomCrop(width=256, height=256),
+            A.Rotate(limit=40, p=0.5),
+            A.HorizontalFlip(p=0.5),
+            A.VerticalFlip(p=0.3),
+            A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=1),        
+            A.ChannelShuffle(p=0.2),
+            A.CLAHE(p=0.5),
+            A.ToGray(p=0.2),
+            A.OneOf(
+                [
+                    A.Blur(blur_limit=3, p=0.5),
+                    A.ColorJitter(p=0.5),
+                ],
+                p=1.0,
+            ),
+            A.ElasticTransform(p=0.3),
+            A.RandomBrightness(),
+        ],
+        additional_targets={'image0': 'image', 'image1': 'image'}
     )
 
+    train_dataset = RenderDataset(images_folder=TRAIN_DATA_PATH, transform=transform)
+    # test_dataset = RenderDataset(images_folder=TEST_DATA_PATH, transform=transform)
+    
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    # test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
     # Logging prep
-    noise_output = Output("outputs/noise.png", VAL_IMAGES, overwrite=False)
-    clean_output = Output("outputs/clean.png", VAL_IMAGES, overwrite=False)
-    gen_output = Output("outputs", VAL_IMAGES, overwrite=True)
+    # noise_output = Output("outputs/noise.png", VAL_IMAGES, overwrite=False)
+    # clean_output = Output("outputs/clean.png", VAL_IMAGES, overwrite=False)
+    # gen_output = Output("outputs", VAL_IMAGES, overwrite=True)
 
     # Resume model checkpoint if given. Otherwise start training from scratch.
     # Resume last if `resume_last` flag is True, otherwise manual checkpoint selection
@@ -113,25 +110,25 @@ def main():
             # Updating epoch loss
             train_loss_epoch += loss.item()
 
-        # Evaluation step
-        model.eval()
-        with torch.no_grad():
-            num_batches = VAL_IMAGES // BATCH_SIZE + 1
+        # # Evaluation step
+        # model.eval()
+        # with torch.no_grad():
+        #     num_batches = VAL_IMAGES // BATCH_SIZE + 1
 
-            for batch_idx, (noise_test, clean_test) in enumerate(
-                tqdm(test_loader, ncols=70, desc="Validation")
-            ):
-                noise_test = noise_test.to(device)
-                clean_test = clean_test.to(device)
-                fake_test = model(noise_test)
+        #     for batch_idx, (noise_test, clean_test) in enumerate(
+        #         tqdm(test_loader, ncols=70, desc="Validation")
+        #     ):
+        #         noise_test = noise_test.to(device)
+        #         clean_test = clean_test.to(device)
+        #         fake_test = model(noise_test)
 
-                loss_test = criterion(fake_test, clean_test)
-                test_loss_epoch += loss_test.item()
+        #         loss_test = criterion(fake_test, clean_test)
+        #         test_loss_epoch += loss_test.item()
 
-                if batch_idx < num_batches:
-                    noise_output.append(noise_test)
-                    clean_output.append(clean_test)
-                    gen_output.append(fake_test)
+        #         if batch_idx < num_batches:
+        #             noise_output.append(noise_test)
+        #             clean_output.append(clean_test)
+        #             gen_output.append(fake_test)
 
         # Store losses of the epoch in the appropriate dictionaries
         train_losses[epoch] = train_loss_epoch
@@ -144,9 +141,9 @@ def main():
         )
 
         # Save output images
-        noise_output.save()
-        clean_output.save()
-        gen_output.save(filename="{}_fake.png".format(str(epoch).zfill(3)))
+        # noise_output.save()
+        # clean_output.save()
+        # gen_output.save(filename="{}_fake.png".format(str(epoch).zfill(3)))
 
         # Save checkpoint
         checkpoint.save(model, optimizer, epoch, train_losses, test_losses)

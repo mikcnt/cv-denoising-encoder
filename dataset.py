@@ -1,7 +1,7 @@
 import os
 import random
 from PIL import Image
-
+import torchvision
 import cv2
 import numpy as np
 from torch.utils.data import Dataset
@@ -97,7 +97,9 @@ class RenderDataset(Dataset):
             noisy_image = augmentations['image']
             clean_image = augmentations['image0']
 
-        clean_image = (clean_image / 255).astype(np.float32)
-        noisy_image = (noisy_image / 255).astype(np.float32)
+        to_tens = torchvision.transforms.ToTensor()
+        
+        clean_image = to_tens((clean_image / 255).astype(np.float32))
+        noisy_image = to_tens((noisy_image / 255).astype(np.float32))
         
         return noisy_image, clean_image

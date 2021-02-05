@@ -17,7 +17,7 @@ def main_parser():
         help="use this flag to resume the last checkpoint of the model",
     )
     parser.add_argument(
-        "--batch_size", default=2, type=int, help="batch size (default: 2)"
+        "--batch_size", default=8, type=int, help="batch size (default: 8)"
     )
     parser.add_argument(
         "--epochs", default=500, type=int, help="number of epochs (default: 500)"

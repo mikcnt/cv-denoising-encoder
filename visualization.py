@@ -124,7 +124,7 @@ layout = [
     ]
 ]
 
-window = sg.Window("Image Viewer", layout, font="Courier 12")
+window = sg.Window("Image Viewer", layout)
 
 model_loaded = False
 # Run the Event Loop
