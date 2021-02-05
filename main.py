@@ -149,8 +149,8 @@ def main():
 
         # Save checkpoint
         checkpoint.save(model, optimizer, epoch, train_losses, test_losses)
-        if DOWNLOAD_CHECKPOINT:
-            checkpoint.download(epoch)
+        if DOWNLOAD_CHECKPOINT and epoch % 5 == 0:
+            checkpoint.download(epoch - 1)
 
 
 if __name__ == "__main__":
