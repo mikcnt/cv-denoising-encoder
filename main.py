@@ -30,6 +30,8 @@ def main():
     DATA_PATH = args.data_path
     TRAIN_DATA_PATH = os.path.join(DATA_PATH, "train")
     TEST_DATA_PATH = os.path.join(DATA_PATH, "test")
+    
+    DOWNLOAD_CHECKPOINT = args.download_checkpoint
 
     # Device selection (gpu if available)
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -147,6 +149,8 @@ def main():
 
         # Save checkpoint
         checkpoint.save(model, optimizer, epoch, train_losses, test_losses)
+        if DOWNLOAD_CHECKPOINT:
+            checkpoint.download(epoch)
 
 
 if __name__ == "__main__":

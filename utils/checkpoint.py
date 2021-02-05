@@ -4,7 +4,6 @@ import torch
 import torch.nn as nn
 import torchvision
 
-
 class Checkpoint:
     def __init__(self, path, resume=False):
         self.path = path
@@ -40,3 +39,10 @@ class Checkpoint:
         complete_path = os.path.join(self.path, checkpoint_name)
         torch.save(model_checkpoint, complete_path)
         return checkpoint_name
+    
+    def download(self, epoch):
+        from google.colab import files
+        checkpoint_name = "{}.pth".format(str(epoch).zfill(3))
+        omplete_path = os.path.join(self.path, checkpoint_name)
+        files.download(complete_path) 
+        
