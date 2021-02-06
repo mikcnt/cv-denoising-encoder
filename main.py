@@ -99,7 +99,9 @@ def main():
         model.train()
         train_loss_epoch = 0
         test_loss_epoch = 0
-        for noise, clean in tqdm(train_loader, ncols=70, desc="Epoch {}".format(epoch)):
+        for noise, clean in tqdm(
+            train_loader, ncols=70, desc="Epoch {}".format(epoch), leave=False
+        ):
             noise = noise.to(device)
             clean = clean.to(device)
             fake = model(noise)
@@ -119,7 +121,7 @@ def main():
             num_batches = VAL_IMAGES // BATCH_SIZE + 1
 
             for batch_idx, (noise_test, clean_test) in enumerate(
-                tqdm(test_loader, ncols=70, desc="Validation")
+                tqdm(test_loader, ncols=70, desc="Validation", leave=False)
             ):
                 noise_test = noise_test.to(device)
                 clean_test = clean_test.to(device)
@@ -138,11 +140,10 @@ def main():
         test_losses[epoch] = test_loss_epoch
 
         print(
-            "Train loss = {:.4f} \t Test loss = {:.4f}".format(
-                train_loss_epoch, test_loss_epoch
-            )
+            f"\n\nEpoch: {epoch}\n"
+            f"Train loss: {train_loss_epoch:.4f}\n"
+            f"Validation loss: {test_loss_epoch:.4f}\n"
         )
-
         # Save output images
         noise_output.save()
         clean_output.save()
