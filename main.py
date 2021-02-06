@@ -122,6 +122,7 @@ def main():
             num_batches = VAL_IMAGES // BATCH_SIZE + 1
 
             if not cached:
+                cache = []
                 for batch_idx, (noise_test, clean_test) in enumerate(
                     tqdm(test_loader, ncols=70, desc="Validation", leave=False)
                 ):

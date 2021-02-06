@@ -5,14 +5,14 @@ import numpy as np
 def pepper(img, threshold=1, amount=0.5):
     _range = 0.4
     h, w, _ = img.shape
-    img_lab = rgb2lab(img)
-    img_l = (
-        img_lab[..., 0].reshape(h, w) / 100
-    )  # Normalize the luminosity between 0 and 1
+    # img_lab = rgb2lab(img)
+    # img_l = (
+    #     img_lab[..., 0].reshape(h, w) / 100
+    # )  # Normalize the luminosity between 0 and 1
     rand_img = np.random.rand(h, w)
-    thresh_img = img_l < threshold
+    # thresh_img = img_l < threshold
     probability_mask = rand_img <= amount
-    black_mask = thresh_img & probability_mask
+    black_mask = probability_mask # & thresh_img
     out = img
 
     luminosity = np.random.rand(*out.shape[:-1]) * _range
