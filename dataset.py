@@ -93,11 +93,11 @@ class RenderDataset(Dataset):
 
         if self.transform:
             augmentations = self.transform(image=noisy_image, image0=clean_image)
-            
-            noisy_image = augmentations['image']
-            clean_image = augmentations['image0']
+
+            noisy_image = augmentations["image"]
+            clean_image = augmentations["image0"]
 
         clean_image = (clean_image / 255).astype(np.float32)
         noisy_image = (noisy_image / 255).astype(np.float32)
-        
+
         return noisy_image, clean_image

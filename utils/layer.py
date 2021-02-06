@@ -28,21 +28,24 @@ def conv_layer(
         activation,
     )
 
+
 def conv_maxpool(in_ch, out_ch, kernel, stride=1):
     return nn.Sequential(
-        conv_layer(in_ch=in_ch, out_ch=out_ch, kernel=kernel, stride=stride),
-        maxpool()
+        conv_layer(in_ch=in_ch, out_ch=out_ch, kernel=kernel, stride=stride), maxpool()
     )
+
 
 def deconv_block(in_ch, out_ch, kernel, stride=1):
     return nn.Sequential(
         conv_layer(in_ch=in_ch, out_ch=out_ch, kernel=kernel, stride=stride),
         conv_layer(in_ch=out_ch, out_ch=out_ch, kernel=kernel, stride=stride),
-        transpose_conv(96, 96)
+        transpose_conv(96, 96),
     )
+
 
 def maxpool(kernel=2):
     return nn.MaxPool2d(kernel_size=kernel)
+
 
 def transpose_conv(in_ch, out_ch, kernel=4, stride=2, padding=1):
     return nn.ConvTranspose2d(in_ch, out_ch, kernel, stride, padding)
