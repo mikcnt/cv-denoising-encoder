@@ -30,6 +30,7 @@ def main():
     USE_DRIVE = args.use_drive
     TRAIN_DATA_PATH = os.path.join(DATA_PATH, "train")
     TEST_DATA_PATH = os.path.join(DATA_PATH, "test")
+    cached = False
 
     # Device selection (gpu if available)
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -80,7 +81,7 @@ def main():
     # Initialization of model, optimizer and criterion
     model = AutoEncoder().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    criterion = nn.BCELoss()
+    criterion = nn.MSELoss()
 
     # Checkpoint loading
     try:
@@ -120,20 +121,39 @@ def main():
         with torch.no_grad():
             num_batches = VAL_IMAGES // BATCH_SIZE + 1
 
-            for batch_idx, (noise_test, clean_test) in enumerate(
-                tqdm(test_loader, ncols=70, desc="Validation", leave=False)
-            ):
-                noise_test = noise_test.to(device)
-                clean_test = clean_test.to(device)
-                fake_test = model(noise_test)
+            if not cached:
+                for batch_idx, (noise_test, clean_test) in enumerate(
+                    tqdm(test_loader, ncols=70, desc="Validation", leave=False)
+                ):
+                    cache.append((noise_test, clean_test))
+                    noise_test = noise_test.to(device)
+                    clean_test = clean_test.to(device)
+                    fake_test = model(noise_test)
 
-                loss_test = criterion(fake_test, clean_test)
-                test_loss_epoch += loss_test.item()
+                    loss_test = criterion(fake_test, clean_test)
+                    test_loss_epoch += loss_test.item()
 
-                if batch_idx < num_batches:
-                    noise_output.append(noise_test)
-                    clean_output.append(clean_test)
-                    gen_output.append(fake_test)
+                    if batch_idx < num_batches:
+                        noise_output.append(noise_test)
+                        clean_output.append(clean_test)
+                        gen_output.append(fake_test)
+                
+                cached = True
+            else:
+                for batch_idx, (noise_test, clean_test) in enumerate(
+                    tqdm(cache, ncols=70, desc="Validation", leave=False)
+                ):
+                    noise_test = noise_test.to(device)
+                    clean_test = clean_test.to(device)
+                    fake_test = model(noise_test)
+
+                    loss_test = criterion(fake_test, clean_test)
+                    test_loss_epoch += loss_test.item()
+
+                    if batch_idx < num_batches:
+                        noise_output.append(noise_test)
+                        clean_output.append(clean_test)
+                        gen_output.append(fake_test)
 
         # Store losses of the epoch in the appropriate dictionaries
         train_losses[epoch] = train_loss_epoch
