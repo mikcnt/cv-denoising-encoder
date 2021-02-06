@@ -51,7 +51,7 @@ class ImageDataset(Dataset):
         noisy_image = clean_image.copy()
         
         noisy_image = cv2.resize(noisy_image, dsize=(512, 512), interpolation=cv2.INTER_CUBIC)
-        clean_image = cv2.resize(clean_image, dsize=(512, 512), interpolation=cv2.INTER_CUBIC)
+        # clean_image = cv2.resize(clean_image, dsize=(512, 512), interpolation=cv2.INTER_CUBIC)
         
         noisy_image = noise.pepper(
             noisy_image, threshold=1, amount=random.uniform(self.p_min, self.p_max)
@@ -62,6 +62,8 @@ class ImageDataset(Dataset):
         noisy_image = noise.salt(
             noisy_image, amount=random.uniform(self.s_min, self.s_max)
         )
+
+        noisy_image = cv2.resize(noisy_image, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
 
         clean_image = clean_image.astype(np.float32)
         noisy_image = noisy_image.astype(np.float32)

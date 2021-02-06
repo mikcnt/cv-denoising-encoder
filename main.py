@@ -35,9 +35,7 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # Data loading
-    transform = torchvision.transforms.Compose(
-        [torchvision.transforms.ToTensor(), torchvision.transforms.Resize((256, 256))]
-    )
+    transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
     # Noise parameters
     g_min = 0.05
     g_max = 0.10
