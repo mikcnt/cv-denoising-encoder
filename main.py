@@ -36,7 +36,6 @@ def main():
 
     # Data loading
     transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
-
     # Noise parameters
     g_min = 0.05
     g_max = 0.09
@@ -151,9 +150,9 @@ def main():
 
         # Save checkpoint
         if USE_DRIVE:
-            checkpoint.save(model, optimizer, epoch, train_losses, test_losses)
-        else:
             checkpoint.save_drive(model, optimizer, epoch, train_losses, test_losses)
+        else:
+            checkpoint.save(model, optimizer, epoch, train_losses, test_losses)
 
 
 if __name__ == "__main__":
