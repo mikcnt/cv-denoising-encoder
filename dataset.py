@@ -49,12 +49,13 @@ class ImageDataset(Dataset):
         image_path = self.image_paths[idx]
         clean_image = np.array(Image.open(image_path)) / 255
         noisy_image = clean_image.copy()
-        
-        noisy_image = cv2.resize(noisy_image, dsize=(512, 512), interpolation=cv2.INTER_CUBIC)
-        # clean_image = cv2.resize(clean_image, dsize=(512, 512), interpolation=cv2.INTER_CUBIC)
-        
+
+        noisy_image = cv2.resize(
+            noisy_image, dsize=(512, 512), interpolation=cv2.INTER_CUBIC
+        )
+
         noisy_image = noise.pepper(
-            noisy_image, threshold=1, amount=random.uniform(self.p_min, self.p_max)
+            noisy_image, amount=random.uniform(self.p_min, self.p_max)
         )
         noisy_image = noise.gaussian(
             noisy_image, amount=random.uniform(self.g_min, self.g_max)
@@ -63,7 +64,9 @@ class ImageDataset(Dataset):
             noisy_image, amount=random.uniform(self.s_min, self.s_max)
         )
 
-        noisy_image = cv2.resize(noisy_image, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
+        noisy_image = cv2.resize(
+            noisy_image, dsize=(256, 256), interpolation=cv2.INTER_CUBIC
+        )
 
         clean_image = clean_image.astype(np.float32)
         noisy_image = noisy_image.astype(np.float32)

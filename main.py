@@ -138,7 +138,7 @@ def main():
                         noise_output.append(noise_test)
                         clean_output.append(clean_test)
                         gen_output.append(fake_test)
-                
+
                 cached = True
             else:
                 for batch_idx, (noise_test, clean_test) in enumerate(
