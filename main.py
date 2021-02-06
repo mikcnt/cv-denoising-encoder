@@ -27,8 +27,10 @@ def main():
     NUM_EPOCHS = args.epochs
     LEARNING_RATE = args.learning_rate
     DATA_PATH = args.data_path
+    USE_DRIVE = args.use_drive
     TRAIN_DATA_PATH = os.path.join(DATA_PATH, "train")
     TEST_DATA_PATH = os.path.join(DATA_PATH, "test")
+    
 
     # Device selection (gpu if available)
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -149,8 +151,10 @@ def main():
         gen_output.save(filename="{}_fake.png".format(str(epoch).zfill(3)))
 
         # Save checkpoint
-        checkpoint.save(model, optimizer, epoch, train_losses, test_losses)
-
+        if USE_DRIVE:
+            checkpoint.save(model, optimizer, epoch, train_losses, test_losses)
+        else:
+            checkpoint.save_drive(model, optimizer, epoch, train_losses, test_losses)
 
 if __name__ == "__main__":
     main()

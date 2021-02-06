@@ -19,7 +19,7 @@ class Checkpoint:
         self.checkpoint = torch.load(
             os.path.join(self.path, id_path), map_location=lambda storage, loc: storage
         )
-        if self.checkpoint == None:
+        if self.checkpoint is None:
             raise RuntimeError("Checkpoint empty!")
         epoch = self.checkpoint["epoch"]
         model.load_state_dict(self.checkpoint["model_state_dict"])
@@ -38,5 +38,20 @@ class Checkpoint:
         }
         checkpoint_name = "{}.pth".format(str(epoch).zfill(3))
         complete_path = os.path.join(self.path, checkpoint_name)
+        torch.save(model_checkpoint, complete_path)
+        return checkpoint_name
+
+    def save_drive(self, model, optimizer, epoch, train_loss, test_loss):
+        model_checkpoint = {
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "epoch": epoch,
+            "train_loss": train_loss,
+            "test_loss": test_loss,
+        }
+        checkpoint_name = "{}.pth".format(str(epoch).zfill(3))
+        complete_path = os.path.join(
+            "/content/drive/MyDrive/checkpoints", checkpoint_name
+        )
         torch.save(model_checkpoint, complete_path)
         return checkpoint_name
