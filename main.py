@@ -35,14 +35,16 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # Data loading
-    transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
+    transform = torchvision.transforms.Compose(
+        [torchvision.transforms.ToTensor(), torchvision.transforms.Resize((256, 256))]
+    )
     # Noise parameters
     g_min = 0.05
-    g_max = 0.09
-    p_min = 0.075
-    p_max = 0.15
-    s_min = 0.03
-    s_max = 0.05
+    g_max = 0.10
+    p_min = 0.10
+    p_max = 0.40
+    s_min = 0.05
+    s_max = 0.20
 
     train_dataset = ImageDataset(
         TRAIN_DATA_PATH,

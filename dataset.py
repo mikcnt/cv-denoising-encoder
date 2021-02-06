@@ -49,6 +49,10 @@ class ImageDataset(Dataset):
         image_path = self.image_paths[idx]
         clean_image = np.array(Image.open(image_path)) / 255
         noisy_image = clean_image.copy()
+        
+        noisy_image = cv2.resize(noisy_image, dsize=(512, 512), interpolation=cv2.INTER_CUBIC)
+        clean_image = cv2.resize(clean_image, dsize=(512, 512), interpolation=cv2.INTER_CUBIC)
+        
         noisy_image = noise.pepper(
             noisy_image, threshold=1, amount=random.uniform(self.p_min, self.p_max)
         )

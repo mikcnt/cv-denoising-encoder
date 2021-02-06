@@ -19,6 +19,7 @@ def pepper(img, threshold=1, amount=0.5):
 
     luminosity = np.dstack([luminosity] * 3)
     out[black_mask, :] = np.multiply(out[black_mask, :], luminosity[black_mask, :])
+    out = np.clip(out, 0, 1)
     return out
 
 
@@ -33,6 +34,7 @@ def salt(img, amount=0.5):
 
     luminosity = np.dstack([luminosity] * 3)
     out[white_mask, :] = out[white_mask, :] + luminosity[white_mask, :]
+    out = np.clip(out, 0, 1)
     return out
 
 
