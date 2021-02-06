@@ -41,22 +41,16 @@ def main():
         [
             A.Resize(width=350, height=350),
             A.RandomCrop(width=256, height=256),
-            A.Rotate(limit=40, p=0.5),
-            A.HorizontalFlip(p=0.5),
-            A.VerticalFlip(p=0.3),
-            A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=1),
-            A.ChannelShuffle(p=0.2),
-            A.CLAHE(p=0.5),
-            A.ToGray(p=0.2),
-            A.OneOf(
-                [
-                    A.Blur(blur_limit=3, p=0.5),
-                    A.ColorJitter(p=0.5),
-                ],
-                p=1.0,
-            ),
-            A.ElasticTransform(p=0.3),
-            A.RandomBrightness(),
+            A.Compose([
+                A.Rotate(limit=40, p=0.5),
+                A.HorizontalFlip(p=0.5),
+                A.VerticalFlip(p=0.3),
+                A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=0.5),
+                A.ChannelShuffle(p=0.2),
+                A.CLAHE(p=0.5),
+                A.RandomBrightness(),
+            ], p=0.5)
+            
         ],
         additional_targets={"image0": "image", "image1": "image"},
     )

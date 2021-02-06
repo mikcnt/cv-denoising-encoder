@@ -10,7 +10,7 @@ def pepper(img, threshold=1, amount=0.5):
         img_lab[..., 0].reshape(h, w) / 100
     )  # Normalize the luminosity between 0 and 1
     rand_img = np.random.rand(h, w)
-    thresh_img = img_l < threshold
+    thresh_img = img_l <= threshold
     probability_mask = rand_img <= amount
     black_mask = thresh_img & probability_mask
     out = img
