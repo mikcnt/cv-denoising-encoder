@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import torchvision
+from torchvision.datasets import ImageFolder 
 
 from models import AutoEncoder
 from dataset import ImageDataset
@@ -66,14 +67,22 @@ def main():
         s_max=s_max,
     )
 
+    valid_dataset = ImageDataset('valid_rend', transform=transform)
+    
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+
+    valid_loader = DataLoader(valid_dataset, batch_size=BATCH_SIZE, shuffle=False)
+
 
     # Logging prep
     noise_output = Output("outputs/noise.png", VAL_IMAGES, overwrite=False)
     clean_output = Output("outputs/clean.png", VAL_IMAGES, overwrite=False)
     gen_output = Output("outputs", VAL_IMAGES, overwrite=True)
-
+    
+    clean_output_v = Output("outputs_valid/clean.png", VAL_IMAGES, overwrite=False)
+    gen_output_v = Output("outputs_valid", VAL_IMAGES, overwrite=True)
+    
     # Resume model checkpoint if given. Otherwise start training from scratch.
     # Resume last if `resume_last` flag is True, otherwise manual checkpoint selection
     checkpoint = Checkpoint("checkpoints", RESUME_LAST)
@@ -123,8 +132,9 @@ def main():
 
             if not cached:
                 cache = []
+                cache_valid = []
                 for batch_idx, (noise_test, clean_test) in enumerate(
-                    tqdm(test_loader, ncols=70, desc="Validation", leave=False)
+                    tqdm(test_loader, ncols=70, desc="Test", leave=False)
                 ):
                     cache.append((noise_test, clean_test))
                     noise_test = noise_test.to(device)
@@ -139,6 +149,18 @@ def main():
                         clean_output.append(clean_test)
                         gen_output.append(fake_test)
 
+                for batch_idx, (_, clean_valid) in enumerate(
+                    tqdm(valid_loader, ncols=70, desc="Validation", leave=False)
+                ):
+                    cache_valid.append((_, clean_valid))
+                    clean_valid = clean_valid.to(device)
+                    fake_valid = model(clean_valid)
+
+
+                    if batch_idx < num_batches:
+                        clean_output_v.append(clean_valid)
+                        gen_output_v.append(fake_valid)
+                
                 cached = True
             else:
                 for batch_idx, (noise_test, clean_test) in enumerate(
@@ -155,6 +177,16 @@ def main():
                         noise_output.append(noise_test)
                         clean_output.append(clean_test)
                         gen_output.append(fake_test)
+                        
+                for batch_idx, (_, clean_valid) in enumerate(
+                    tqdm(cache_valid, ncols=70, desc="Validation", leave=False)
+                ):
+                    clean_valid = clean_valid.to(device)
+                    fake_valid = model(clean_valid)
+
+                    if batch_idx < num_batches:
+                        clean_output_v.append(clean_valid)
+                        gen_output_v.append(fake_valid)
 
         # Store losses of the epoch in the appropriate dictionaries
         train_losses[epoch] = train_loss_epoch
@@ -169,6 +201,9 @@ def main():
         noise_output.save()
         clean_output.save()
         gen_output.save(filename="{}_fake.png".format(str(epoch).zfill(3)))
+        
+        clean_output_v.save()
+        gen_output_v.save(filename="{}_fake.png".format(str(epoch).zfill(3)))
 
         # Save checkpoint
         if USE_DRIVE:

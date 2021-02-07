@@ -25,7 +25,7 @@ class ImageDataset(Dataset):
         transform=None,
     ):
         super().__init__()
-        files = os.listdir(images_folder)
+        files = sorted(os.listdir(images_folder))
         self.image_paths = [
             images_folder + "/" + file
             for file in files
