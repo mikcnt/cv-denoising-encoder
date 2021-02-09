@@ -85,6 +85,7 @@ elif args.dataset == "render":
 else:
     raise AssertionError("Dataset type not valid.")
 
+print("Dataset loaded.")
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -104,6 +105,8 @@ gan_checkpoint = torch.load(
 )
 generator.load_state_dict(gan_checkpoint["model_state_dict"])
 
+print("GAN checkpoint loaded.")
+
 autoencoder = OldAutoEncoder().to(device)
 
 encoder_checkpoint = torch.load(
@@ -111,6 +114,7 @@ encoder_checkpoint = torch.load(
 )
 autoencoder.load_state_dict(encoder_checkpoint["model_state_dict"])
 
+print("Autoencoder checkpoint loaded.")
 
 psnr = PSNR()
 
@@ -143,7 +147,7 @@ for noise, clean in tqdm(loader):
     clean = clean.to(device)
 
     fake_gan = generator(noise)
-    fake_encoder = encoder(noise)
+    fake_encoder = autoencoder(noise)
 
     clean = clean * 255
     noise = noise * 255
