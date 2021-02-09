@@ -24,12 +24,17 @@ parser.add_argument(
     type=str,
     help="dataset type",
 )
-
 parser.add_argument(
     "--noise",
     default="all",
     type=str,
     help="noise type",
+)
+parser.add_argument(
+    "--use_drive",
+    dest="use_drive",
+    action="store_true",
+    help="use this flag to load checkpoints and save stats on drive",
 )
 
 args = parser.parse_args()
@@ -86,6 +91,14 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 generator = Generator().to(device)
 
 gan_checkpoint_path = "best_models/300_gan_pixar.pth"
+encoder_checkpoint_path = "best_models/200_tconv.pth"
+
+if args.use_drive:
+    gan_checkpoint_path = os.path.join("/content/drive/MyDrive", gan_checkpoint_path)
+    encoder_checkpoint_path = os.path.join(
+        "/content/drive/MyDrive", encoder_checkpoint_path
+    )
+
 gan_checkpoint = torch.load(
     gan_checkpoint_path, map_location=lambda storage, loc: storage
 )
@@ -93,7 +106,6 @@ generator.load_state_dict(gan_checkpoint["model_state_dict"])
 
 autoencoder = OldAutoEncoder().to(device)
 
-encoder_checkpoint_path = "best_models/200_tconv.pth"
 encoder_checkpoint = torch.load(
     encoder_checkpoint_path, map_location=lambda storage, loc: storage
 )
@@ -148,10 +160,19 @@ for noise, clean in tqdm(loader):
     encoder_acc["ssim"]["noise"] += ssim(noise, clean)
     encoder_acc["ssim"]["fake"] += ssim(fake_encoder, clean)
 
-os.makedirs("evaluations", exist_ok=True)
 
-with open("evaluations/gan_acc_{}.pkl".format(save_name), "wb") as f:
+evaluations_path = "evaluations"
+
+if args.use_drive:
+    evaluations_path = os.path.join("/content/drive/MyDrive", evaluations_path)
+
+gan_path = os.path.join(evaluations_path, "gan_acc_{}.pkl".format(save_name))
+encoder_path = os.path.join(evaluations_path, "encoder_acc_{}.pkl".format(save_name))
+
+os.makedirs(evaluations_path, exist_ok=True)
+
+with open(gan_path, "wb") as f:
     pickle.dump(gan_acc, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-with open("evaluations/encoder_acc_{}.pkl".format(save_name), "wb") as f:
+with open(encoder_path, "wb") as f:
     pickle.dump(encoder_acc, f, protocol=pickle.HIGHEST_PROTOCOL)
