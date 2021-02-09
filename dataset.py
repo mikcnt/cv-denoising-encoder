@@ -23,6 +23,7 @@ class ImageDataset(Dataset):
         s_min=0.1,
         s_max=0.2,
         transform=None,
+        seed=False
     ):
         super().__init__()
         files = sorted(os.listdir(images_folder))
@@ -38,6 +39,9 @@ class ImageDataset(Dataset):
         self.s_min = s_min
         self.s_max = s_max
         self.transform = transform
+        if seed:
+            random.seed(42)
+            np.random.seed(42)
 
     # Returns the number of samples, it is used for iteration porpuses
     def __len__(self):
@@ -49,11 +53,6 @@ class ImageDataset(Dataset):
         image_path = self.image_paths[idx]
         clean_image = np.array(Image.open(image_path)) / 255
         noisy_image = clean_image.copy()
-
-        noisy_image = cv2.resize(
-            noisy_image, dsize=(512, 512), interpolation=cv2.INTER_CUBIC
-        )
-
         noisy_image = noise.pepper(
             noisy_image, amount=random.uniform(self.p_min, self.p_max)
         )
@@ -62,10 +61,6 @@ class ImageDataset(Dataset):
         )
         noisy_image = noise.salt(
             noisy_image, amount=random.uniform(self.s_min, self.s_max)
-        )
-
-        noisy_image = cv2.resize(
-            noisy_image, dsize=(256, 256), interpolation=cv2.INTER_CUBIC
         )
 
         clean_image = clean_image.astype(np.float32)

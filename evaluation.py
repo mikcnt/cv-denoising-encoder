@@ -18,6 +18,13 @@ from utils.measures import ssim, PSNR
 
 parser = argparse.ArgumentParser(description="Evaluation parser")
 
+
+parser.add_argument(
+    "--model",
+    default="",
+    type=str,
+    help="model type",
+)
 parser.add_argument(
     "--dataset",
     default="",
@@ -90,36 +97,43 @@ print("Dataset loaded.")
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-generator = Generator().to(device)
 
-gan_checkpoint_path = "best_models/300_gan_pixar.pth"
-encoder_checkpoint_path = "best_models/200_tconv.pth"
+if args.model == "gan":
+    model = Generator().to(device)
 
-if args.use_drive:
-    gan_checkpoint_path = os.path.join("/content/drive/MyDrive", gan_checkpoint_path)
-    encoder_checkpoint_path = os.path.join(
-        "/content/drive/MyDrive", encoder_checkpoint_path
+    gan_checkpoint_path = "best_models/300_gan_pixar.pth"
+
+    if args.use_drive:
+        gan_checkpoint_path = os.path.join("/content/drive/MyDrive", gan_checkpoint_path)
+
+    gan_checkpoint = torch.load(
+        gan_checkpoint_path, map_location=lambda storage, loc: storage
     )
+    model.load_state_dict(gan_checkpoint["model_state_dict"])
 
-gan_checkpoint = torch.load(
-    gan_checkpoint_path, map_location=lambda storage, loc: storage
-)
-generator.load_state_dict(gan_checkpoint["model_state_dict"])
+    print("GAN checkpoint loaded.")
 
-print("GAN checkpoint loaded.")
+    encoder_checkpoint_path = "best_models/200_tconv.pth"
+    if args.use_drive:
+        encoder_checkpoint_path = os.path.join(
+            "/content/drive/MyDrive", encoder_checkpoint_path
+        )
+elif args.model == "encoder":
+    model = OldAutoEncoder().to(device)
 
-autoencoder = OldAutoEncoder().to(device)
+    encoder_checkpoint = torch.load(
+        encoder_checkpoint_path, map_location=lambda storage, loc: storage
+    )
+    model.load_state_dict(encoder_checkpoint["model_state_dict"])
 
-encoder_checkpoint = torch.load(
-    encoder_checkpoint_path, map_location=lambda storage, loc: storage
-)
-autoencoder.load_state_dict(encoder_checkpoint["model_state_dict"])
+    print("Autoencoder checkpoint loaded.")
+else:
+    raise AssertionError("Model type not valid.")
 
-print("Autoencoder checkpoint loaded.")
 
 psnr = PSNR()
 
-gan_acc = {
+model_acc = {
     "psnr": {
         "noise": 0,
         "fake": 0,
@@ -130,54 +144,30 @@ gan_acc = {
     },
 }
 
-encoder_acc = {
-    "psnr": {
-        "noise": 0,
-        "fake": 0,
-    },
-    "ssim": {
-        "noise": 0,
-        "fake": 0,
-    },
-}
-
-generator.eval()
-autoencoder.eval()
+model.eval()
 for noise, clean in tqdm(loader):
     noise = noise.to(device)
     clean = clean.to(device)
 
-    fake_gan = generator(noise)
-    fake_encoder = autoencoder(noise)
+    fake = model(noise)
 
     clean = clean * 255
     noise = noise * 255
-    fake_gan = fake_gan * 255
-    fake_encoder = fake_encoder * 255
+    fake = fake * 255
 
-    gan_acc["psnr"]["noise"] += psnr(noise, clean)
-    gan_acc["psnr"]["fake"] += psnr(fake_gan, clean)
-    gan_acc["ssim"]["noise"] += ssim(noise, clean)
-    gan_acc["ssim"]["fake"] += ssim(fake_gan, clean)
-
-    encoder_acc["psnr"]["noise"] += psnr(noise, clean)
-    encoder_acc["psnr"]["fake"] += psnr(fake_encoder, clean)
-    encoder_acc["ssim"]["noise"] += ssim(noise, clean)
-    encoder_acc["ssim"]["fake"] += ssim(fake_encoder, clean)
-
+    model_acc["psnr"]["noise"] += psnr(noise, clean)
+    model_acc["psnr"]["fake"] += psnr(fake, clean)
+    model_acc["ssim"]["noise"] += ssim(noise, clean)
+    model_acc["ssim"]["fake"] += ssim(fake, clean)
 
 evaluations_path = "evaluations"
 
 if args.use_drive:
     evaluations_path = os.path.join("/content/drive/MyDrive", evaluations_path)
 
-gan_path = os.path.join(evaluations_path, "gan_acc_{}.pkl".format(save_name))
-encoder_path = os.path.join(evaluations_path, "encoder_acc_{}.pkl".format(save_name))
+model_path = os.path.join(evaluations_path, "{}_acc_{}.pkl".format(args.model, save_name))
 
 os.makedirs(evaluations_path, exist_ok=True)
 
-with open(gan_path, "wb") as f:
-    pickle.dump(gan_acc, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-with open(encoder_path, "wb") as f:
-    pickle.dump(encoder_acc, f, protocol=pickle.HIGHEST_PROTOCOL)
+with open(model_path, "wb") as f:
+    pickle.dump(model_acc, f, protocol=pickle.HIGHEST_PROTOCOL)
