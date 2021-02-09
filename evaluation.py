@@ -104,7 +104,9 @@ if args.model == "gan":
     gan_checkpoint_path = "best_models/300_gan_pixar.pth"
 
     if args.use_drive:
-        gan_checkpoint_path = os.path.join("/content/drive/MyDrive", gan_checkpoint_path)
+        gan_checkpoint_path = os.path.join(
+            "/content/drive/MyDrive", gan_checkpoint_path
+        )
 
     gan_checkpoint = torch.load(
         gan_checkpoint_path, map_location=lambda storage, loc: storage
@@ -165,7 +167,9 @@ evaluations_path = "evaluations"
 if args.use_drive:
     evaluations_path = os.path.join("/content/drive/MyDrive", evaluations_path)
 
-model_path = os.path.join(evaluations_path, "{}_acc_{}.pkl".format(args.model, save_name))
+model_path = os.path.join(
+    evaluations_path, "{}_acc_{}.pkl".format(args.model, save_name)
+)
 
 os.makedirs(evaluations_path, exist_ok=True)
 
