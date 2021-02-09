@@ -36,6 +36,7 @@ parser.add_argument(
     action="store_true",
     help="use this flag to load checkpoints and save stats on drive",
 )
+parser.add_argument("--batch_size", default=8, type=int, help="batch size (default: 8)")
 
 args = parser.parse_args()
 
@@ -73,7 +74,7 @@ if args.dataset == "coco":
         s_max=s_max,
     )
 
-    loader = DataLoader(dataset, batch_size=8, shuffle=False)
+    loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 elif args.dataset == "render":
     path = "data_rend/train"
     save_name = "render"
@@ -81,7 +82,7 @@ elif args.dataset == "render":
         [torchvision.transforms.ToTensor(), torchvision.transforms.Resize(256, 256)]
     )
     dataset = RenderDataset(path, transform=transform)
-    loader = DataLoader(dataset, batch_size=8, shuffle=False)
+    loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 else:
     raise AssertionError("Dataset type not valid.")
 
