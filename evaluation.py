@@ -114,13 +114,13 @@ if args.model == "gan":
     model.load_state_dict(gan_checkpoint["model_state_dict"])
 
     print("GAN checkpoint loaded.")
-
+elif args.model == "encoder":
     encoder_checkpoint_path = "best_models/200_tconv.pth"
     if args.use_drive:
         encoder_checkpoint_path = os.path.join(
             "/content/drive/MyDrive", encoder_checkpoint_path
         )
-elif args.model == "encoder":
+
     model = OldAutoEncoder().to(device)
 
     encoder_checkpoint = torch.load(
