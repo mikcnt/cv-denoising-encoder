@@ -134,12 +134,12 @@ else:
 
 model_acc = {
     "psnr": {
-        "noise": 0,
-        "fake": 0,
+        "noise": [],
+        "fake": [],
     },
     "ssim": {
-        "noise": 0,
-        "fake": 0,
+        "noise": [],
+        "fake": [],
     },
 }
 
@@ -158,6 +158,13 @@ for noise, clean in tqdm(loader):
     model_acc["psnr"]["fake"] += psnr(fake, clean).item()
     model_acc["ssim"]["noise"] += ssim(noise, clean).item()
     model_acc["ssim"]["fake"] += ssim(fake, clean).item()
+
+def mean(item):
+    return sum(item) / len(item)
+
+for measure in model_acc:
+    for key in model_acc[measure]:
+        model_acc[measure][key] = mean(model_acc[measure][key])
 
 evaluations_path = "evaluations"
 
