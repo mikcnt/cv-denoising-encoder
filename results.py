@@ -3,6 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 import torchvision
 import numpy as np
+import matplotlib.pyplot as plt
 import cv2
 from tqdm import tqdm
 import pickle
@@ -13,7 +14,6 @@ from architectures.gan import Generator
 from utils.checkpoint import Checkpoint
 from dataset import ImageDataset, RenderDataset
 import utils.noise as noise
-from utils.measures import ssim, psnr
 
 
 parser = argparse.ArgumentParser(description="Evaluation parser")
@@ -44,13 +44,14 @@ parser.add_argument(
     help="use this flag to load checkpoints and save stats on drive",
 )
 parser.add_argument("--batch_size", default=8, type=int, help="batch size (default: 8)")
+parser.add_argument("--num_images", default=0, type=int, help="number of images (default: 0)")
 
 args = parser.parse_args()
 
 if args.dataset == "coco":
     path = "coco/test"
     if args.noise == "all":
-        save_name = "coco_all"
+        dataset_name = "coco_all"
         g_min = 0.08
         g_max = 0.12
         p_min = 0.05
@@ -58,7 +59,7 @@ if args.dataset == "coco":
         s_min = 0.03
         s_max = 0.05
     elif args.noise == "gaussian":
-        save_name = "coco_gaussian"
+        dataset_name = "coco_gaussian"
         g_min = 0.08
         g_max = 0.12
         p_min = 0.0
@@ -66,7 +67,7 @@ if args.dataset == "coco":
         s_min = 0.0
         s_max = 0.0
     else:
-        raise AssertionError("Noise tyoe not valid.")
+        raise AssertionError("Noise type not valid.")
 
     transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
 
@@ -79,12 +80,13 @@ if args.dataset == "coco":
         p_max=p_max,
         s_min=s_max,
         s_max=s_max,
+        seed=True
     )
 
     loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 elif args.dataset == "render":
     path = "data_rend/train"
-    save_name = "render"
+    dataset_name = "render"
     transform = torchvision.transforms.Compose(
         [torchvision.transforms.ToTensor(), torchvision.transforms.Resize((256, 256))]
     )
@@ -131,51 +133,29 @@ elif args.model == "encoder":
 else:
     raise AssertionError("Model type not valid.")
 
+results_path = os.path.join("results", f"{args.model}_{dataset_name}")
 
-model_acc = {
-    "psnr": {
-        "noise": [],
-        "fake": [],
-    },
-    "ssim": {
-        "noise": [],
-        "fake": [],
-    },
-}
+if args.use_drive:
+    results_path = os.path.join("/content/drive/MyDrive", results_path)
+
+os.makedirs(results_path, exist_ok=True)
 
 model.eval()
+i = 1
 for noise, clean in tqdm(loader):
     noise = noise.to(device)
     clean = clean.to(device)
-
     fake = model(noise)
-
-    clean = clean * 255
-    noise = noise * 255
-    fake = fake * 255
-
-    model_acc["psnr"]["noise"].append(psnr(noise, clean).item())
-    model_acc["psnr"]["fake"].append(psnr(fake, clean).item())
-    model_acc["ssim"]["noise"].append(ssim(noise, clean).item())
-    model_acc["ssim"]["fake"].append(ssim(fake, clean).item())
-
-def mean(item):
-    return sum(item) / len(item)
-
-for measure in model_acc:
-    for key in model_acc[measure]:
-        model_acc[measure][key] = mean(model_acc[measure][key])
-
-evaluations_path = "evaluations"
-
-if args.use_drive:
-    evaluations_path = os.path.join("/content/drive/MyDrive", evaluations_path)
-
-model_path = os.path.join(
-    evaluations_path, "{}_acc_{}.pkl".format(args.model, save_name)
-)
-
-os.makedirs(evaluations_path, exist_ok=True)
-
-with open(model_path, "wb") as f:
-    pickle.dump(model_acc, f, protocol=pickle.HIGHEST_PROTOCOL)
+    for clean_img, noise_img, fake_img in zip(clean, noise, fake):
+        clean_path = os.path.join(results_path, "{}_clean.png".format(str(i).zfill(3)))
+        noise_path = os.path.join(results_path, "{}_noise.png".format(str(i).zfill(3)))
+        fake_path = os.path.join(results_path, "{}_fake.png".format(str(i).zfill(3)))
+        clean_img = clean_img.cpu().detach().permute(1, 2, 0).numpy()
+        noise_img = noise_img.cpu().detach().permute(1, 2, 0).numpy()
+        fake_img = fake_img.cpu().detach().permute(1, 2, 0).numpy()
+        plt.imsave(clean_path, clean_img)
+        plt.imsave(noise_path, noise_img)
+        plt.imsave(fake_path, fake_img)
+        i += 1
+        if i == args.num_images:
+            exit()
