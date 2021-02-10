@@ -44,6 +44,12 @@ parser.add_argument(
     help="use this flag to load checkpoints and save stats on drive",
 )
 parser.add_argument("--batch_size", default=8, type=int, help="batch size (default: 8)")
+parser.add_argument(
+    "--use_gpu",
+    dest="use_gpu",
+    action="store_true",
+    help="use this flag to use cpu",
+)
 
 args = parser.parse_args()
 
@@ -95,8 +101,10 @@ else:
 
 print("Dataset loaded.")
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
+if args.use_gpu:
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+else:
+    device = "cpu"
 
 if args.model == "gan":
     model = Generator().to(device)
