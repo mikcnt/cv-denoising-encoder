@@ -13,7 +13,7 @@ from architectures.gan import Generator
 from utils.checkpoint import Checkpoint
 from dataset import ImageDataset, RenderDataset
 import utils.noise as noise
-from utils.measures import ssim, PSNR
+from utils.measures import ssim, psnr
 
 
 parser = argparse.ArgumentParser(description="Evaluation parser")
@@ -44,12 +44,6 @@ parser.add_argument(
     help="use this flag to load checkpoints and save stats on drive",
 )
 parser.add_argument("--batch_size", default=8, type=int, help="batch size (default: 8)")
-parser.add_argument(
-    "--use_gpu",
-    dest="use_gpu",
-    action="store_true",
-    help="use this flag to use cpu",
-)
 
 args = parser.parse_args()
 
@@ -101,10 +95,7 @@ else:
 
 print("Dataset loaded.")
 
-if args.use_gpu:
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-else:
-    device = "cpu"
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 if args.model == "gan":
     model = Generator().to(device)
@@ -141,8 +132,6 @@ else:
     raise AssertionError("Model type not valid.")
 
 
-psnr = PSNR()
-
 model_acc = {
     "psnr": {
         "noise": 0,
@@ -165,10 +154,10 @@ for noise, clean in tqdm(loader):
     noise = noise * 255
     fake = fake * 255
 
-    model_acc["psnr"]["noise"] += psnr(noise, clean)
-    model_acc["psnr"]["fake"] += psnr(fake, clean)
-    model_acc["ssim"]["noise"] += ssim(noise, clean)
-    model_acc["ssim"]["fake"] += ssim(fake, clean)
+    model_acc["psnr"]["noise"] += psnr(noise, clean).item()
+    model_acc["psnr"]["fake"] += psnr(fake, clean).item()
+    model_acc["ssim"]["noise"] += ssim(noise, clean).item()
+    model_acc["ssim"]["fake"] += ssim(fake, clean).item()
 
 evaluations_path = "evaluations"
 
