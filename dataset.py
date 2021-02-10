@@ -77,11 +77,13 @@ class RenderDataset(Dataset):
     def __init__(
         self,
         images_folder,
+        A_transform=None,
         transform=None,
     ):
         super().__init__()
         self.images_folder = images_folder
         self.image_paths = sorted(find_paths(images_folder))
+        self.A_transform = A_transform
         self.transform = transform
 
     # Returns the number of samples, it is used for iteration porpuses
@@ -95,13 +97,17 @@ class RenderDataset(Dataset):
         noisy_image = np.array(Image.open(image_path))
         clean_image = np.array(Image.open(t_path(self.images_folder, image_path)))
 
-        if self.transform:
-            augmentations = self.transform(image=noisy_image, image0=clean_image)
+        if self.A_transform:
+            augmentations = self.A_transform(image=noisy_image, image0=clean_image)
 
             noisy_image = augmentations["image"]
             clean_image = augmentations["image0"]
 
         clean_image = (clean_image / 255).astype(np.float32)
         noisy_image = (noisy_image / 255).astype(np.float32)
+        
+        if self.transform:
+            noisy_image = self.transform(noisy_image)
+            clean_image = self.transform(clean_image)
 
         return noisy_image, clean_image

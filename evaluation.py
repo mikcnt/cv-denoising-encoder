@@ -86,7 +86,7 @@ elif args.dataset == "render":
     path = "data_rend/train"
     save_name = "render"
     transform = torchvision.transforms.Compose(
-        [torchvision.transforms.ToTensor(), torchvision.transforms.Resize(256, 256)]
+        [torchvision.transforms.ToTensor(), torchvision.transforms.Resize((256, 256))]
     )
     dataset = RenderDataset(path, transform=transform)
     loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
