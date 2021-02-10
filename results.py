@@ -100,7 +100,6 @@ print("Dataset loaded.")
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 if args.model == "gan":
-    model = Generator().to(device)
 
     gan_checkpoint_path = "best_models/300_gan_pixar.pth"
 
@@ -108,6 +107,8 @@ if args.model == "gan":
         gan_checkpoint_path = os.path.join(
             "/content/drive/MyDrive", gan_checkpoint_path
         )
+
+    model = Generator().to(device)
 
     gan_checkpoint = torch.load(
         gan_checkpoint_path, map_location=lambda storage, loc: storage
@@ -152,7 +153,8 @@ for noise, clean in tqdm(loader):
         fake_path = os.path.join(results_path, "{}_fake.png".format(str(i).zfill(3)))
         clean_img = clean_img.cpu().detach().permute(1, 2, 0).numpy()
         noise_img = noise_img.cpu().detach().permute(1, 2, 0).numpy()
-        fake_img = fake_img.cpu().detach().permute(1, 2, 0).numpy()
+        fake_img = np.clip(fake_img.cpu().detach().permute(1, 2, 0).numpy(), 0, 1)
+        
         plt.imsave(clean_path, clean_img)
         plt.imsave(noise_path, noise_img)
         plt.imsave(fake_path, fake_img)

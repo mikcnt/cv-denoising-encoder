@@ -66,7 +66,7 @@ if args.dataset == "coco":
         s_min = 0.0
         s_max = 0.0
     else:
-        raise AssertionError("Noise tyoe not valid.")
+        raise AssertionError("Noise type not valid.")
 
     transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
 
