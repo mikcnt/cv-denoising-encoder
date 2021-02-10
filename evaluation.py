@@ -10,6 +10,7 @@ import argparse
 
 from architectures.old_autoencoder import OldAutoEncoder
 from architectures.gan import Generator
+from architectures.autoencoder import AutoEncoder
 from utils.checkpoint import Checkpoint
 from dataset import ImageDataset, RenderDataset
 import utils.noise as noise
@@ -114,13 +115,13 @@ if args.model == "gan":
 
     print("GAN checkpoint loaded.")
 elif args.model == "encoder":
-    encoder_checkpoint_path = "best_models/200_tconv.pth"
+    encoder_checkpoint_path = "best_models/300_encoder_pixar.pth"
     if args.use_drive:
         encoder_checkpoint_path = os.path.join(
             "/content/drive/MyDrive", encoder_checkpoint_path
         )
 
-    model = OldAutoEncoder().to(device)
+    model = AutoEncoder().to(device)
 
     encoder_checkpoint = torch.load(
         encoder_checkpoint_path, map_location=lambda storage, loc: storage
