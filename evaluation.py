@@ -50,7 +50,7 @@ args = parser.parse_args()
 if args.dataset == "coco":
     path = "coco/test"
     if args.noise == "all":
-        save_name = "coco_gaussian"
+        save_name = "coco_all"
         g_min = 0.05
         g_max = 0.10
         p_min = 0.10
@@ -58,7 +58,7 @@ if args.dataset == "coco":
         s_min = 0.05
         s_max = 0.20
     elif args.noise == "gaussian":
-        save_name = "coco_all"
+        save_name = "coco_gaussian"
         g_min = 0.05
         g_max = 0.10
         p_min = 0.0
