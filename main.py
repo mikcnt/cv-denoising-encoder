@@ -82,7 +82,7 @@ def main():
     # Initialization of model, optimizer and criterion
     model = AutoEncoder().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    criterion = nn.BCELoss()
+    criterion = nn.MSELoss()
 
     # Checkpoint loading
     try:
