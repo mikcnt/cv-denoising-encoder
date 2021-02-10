@@ -52,8 +52,8 @@ class SSIM(torch.nn.Module):
         else:
             window = create_window(self.window_size, channel)
             
-            if img1.is_cuda:
-                window = window.cuda(img1.get_device())
+            # if img1.is_cuda:
+            #     window = window.cuda(img1.get_device())
             window = window.type_as(img1)
             
             self.window = window
@@ -66,21 +66,14 @@ def ssim(img1, img2, window_size = 11, size_average = True):
     (_, channel, _, _) = img1.size()
     window = create_window(window_size, channel)
     
-    if img1.is_cuda:
-        window = window.cuda(img1.get_device())
+    # if img1.is_cuda:
+    #     window = window.cuda(img1.get_device())
     window = window.type_as(img1)
     
     return _ssim(img1, img2, window, window_size, channel, size_average)
 
-class PSNR:
-    """Peak Signal to Noise Ratio
-    img1 and img2 have range [0, 255]"""
 
-    def __init__(self):
-        self.name = "PSNR"
-
-    @staticmethod
-    def __call__(img1, img2):
-        # mse = torch.mean((img1 - img2) ** 2)
-        mse = F.mse_loss(img1, img2)
-        return 20 * torch.log10(255.0 / torch.sqrt(mse))
+def psnr(img1, img2):
+    # mse = torch.mean((img1 - img2) ** 2)
+    mse = F.mse_loss(img1, img2)
+    return 20 * torch.log10(255.0 / torch.sqrt(mse))
