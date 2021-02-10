@@ -154,10 +154,10 @@ for noise, clean in tqdm(loader):
     noise = noise * 255
     fake = fake * 255
 
-    model_acc["psnr"]["noise"] += psnr(noise, clean).item()
-    model_acc["psnr"]["fake"] += psnr(fake, clean).item()
-    model_acc["ssim"]["noise"] += ssim(noise, clean).item()
-    model_acc["ssim"]["fake"] += ssim(fake, clean).item()
+    model_acc["psnr"]["noise"].append(psnr(noise, clean).item())
+    model_acc["psnr"]["fake"].append(psnr(fake, clean).item())
+    model_acc["ssim"]["noise"].append(ssim(noise, clean).item())
+    model_acc["ssim"]["fake"].append(ssim(fake, clean).item())
 
 def mean(item):
     return sum(item) / len(item)
