@@ -84,7 +84,7 @@ if args.dataset == "coco":
 
     loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 elif args.dataset == "render":
-    path = "data_rend/train"
+    path = "data_rend/test"
     save_name = "render"
     transform = torchvision.transforms.Compose(
         [torchvision.transforms.ToTensor(), torchvision.transforms.Resize((256, 256))]

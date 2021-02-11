@@ -86,7 +86,7 @@ if args.dataset == "coco":
 
     loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 elif args.dataset == "render":
-    path = "data_rend/train"
+    path = "data_rend/test"
     dataset_name = "render"
     transform = torchvision.transforms.Compose(
         [torchvision.transforms.ToTensor(), torchvision.transforms.Resize((256, 256))]
@@ -118,7 +118,7 @@ if args.model == "gan":
 
     print("GAN checkpoint loaded.")
 elif args.model == "encoder":
-    encoder_checkpoint_path = "best_models/300_encoder_pixar.pth"
+    encoder_checkpoint_path = "best_models/380.pth"
     if args.use_drive:
         encoder_checkpoint_path = os.path.join(
             "/content/drive/MyDrive", encoder_checkpoint_path
@@ -153,7 +153,7 @@ for noise, clean in tqdm(loader):
         noise_path = os.path.join(results_path, "{}_noise.png".format(str(i).zfill(3)))
         fake_path = os.path.join(results_path, "{}_fake.png".format(str(i).zfill(3)))
         clean_img = clean_img.cpu().detach().permute(1, 2, 0).numpy()
-        noise_img = noise_img.cpu().detach().permute(1, 2, 0).numpy()
+        noise_img = np.clip(noise_img.cpu().detach().permute(1, 2, 0).numpy(), 0, 1)
         fake_img = np.clip(fake_img.cpu().detach().permute(1, 2, 0).numpy(), 0, 1)
         
         plt.imsave(clean_path, clean_img)
