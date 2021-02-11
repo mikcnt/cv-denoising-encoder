@@ -32,8 +32,35 @@ To train the model from scratch, it is mandatory to have a data directory in whi
     └── 9.jpg
 ```
 ### Training
-Once you have the files well organized, you can start the training directly from command line, as shown in the following example:
+Once you have the files well organized, you can start the training directly from command line:
 
 ```shell
-$ python3 main.py --batch_size 8 --data_path data --
+$ python main.py --batch_size 8 --data_path data
+```
+
+Apart from this super simple example, there are quite a few parameters that can be set.
+```shell
+$ python main.py --h
+usage: main.py [-h] [--model_checkpoint MODEL_CHECKPOINT] [--resume_last]
+               [--batch_size BATCH_SIZE] [--epochs EPOCHS]
+               [--learning_rate LEARNING_RATE] [--data_path DATA_PATH]
+               [--use_drive]
+
+Arguments parser
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --model_checkpoint MODEL_CHECKPOINT
+                        path to .pth file checkpoint of the model (default:
+                        none)
+  --resume_last         use this flag to resume the last checkpoint of the
+                        model
+  --batch_size BATCH_SIZE
+                        batch size (default: 8)
+  --epochs EPOCHS       number of epochs (default: 500)
+  --learning_rate LEARNING_RATE
+                        learning rate (default 0.1)
+  --data_path DATA_PATH
+                        dataset path
+  --use_drive           use this flag to save checkpoint on drive
 ```
