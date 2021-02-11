@@ -32,13 +32,13 @@ To train the model from scratch, it is mandatory to have a data directory in whi
     └── 9.jpg
 ```
 ### Training
-Once you have the files well organized, you can start the training directly from command line:
+Once you have the files well organized, you can start the training directly from command line. For example, to select batch size of 8, training and testing set in the directory data, run:
 
 ```shell
 $ python main.py --batch_size 8 --data_path data
 ```
 
-Apart from this super simple example, there are quite a few parameters that can be set.
+Apart from this super simple example, there are quite a few parameters that can be set. It is possible to resume last checkpoint, use drive as storage (e.g., if training on Colab), etc.
 ```shell
 $ python main.py --h
 usage: main.py [-h] [--model_checkpoint MODEL_CHECKPOINT] [--resume_last]
